@@ -174,6 +174,8 @@ nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:re
 nav.tabs button{height:64px;border:0;background:none;font-weight:800;font-size:14px;color:var(--muted)}
 nav.tabs button[aria-current="page"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
 [hidden]{display:none!important}
+.stat.kc{border-color:var(--accent);background:var(--accent-soft)}
+.card.bwq{margin:10px 0 0;border-color:var(--sel)}
 .placeseg{display:grid;gap:6px;margin:8px 0 4px}
 .placeseg>div{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .placeseg button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:800;font-size:14px}
@@ -516,7 +518,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.2.0",newVer=null;
+var APP_VER="v1.3.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -603,11 +605,38 @@ function tagOfD(it,d){if(it.t==="s"){var pl=placeOf(week,d);if(pl==="home")retur
 function tagOf(it){if(it.t==="s")return it.moved?"보충":SES[it.s].short;return{drink:"술약속",rec:"회복",opt:"선택",rest:"휴식"}[it.t];}
 
 /* ---------- 그리기 ---------- */
+/* ---------- 칼로리 추정 (MET × 3.5 × 체중kg ÷ 200 × 분) ---------- */
+function curKg(){var l=(S.bw||[]).filter(function(x){return x.kg>0;}).sort(function(a,b){return a.d<b.d?-1:1;});return l.length?l[l.length-1].kg:(PF&&PF.w)||70;}
+function kcalOf(met,min){return met*3.5*curKg()/200*min;}
+function runMet(kmh){var pts=[[6.4,6.0],[8.0,8.3],[9.7,9.8],[11.3,11.0],[12.9,11.8]];if(kmh<=pts[0][0])return pts[0][1];for(var i=1;i<pts.length;i++){if(kmh<=pts[i][0]){var a=pts[i-1],b=pts[i];return a[1]+(b[1]-a[1])*(kmh-a[0])/(b[0]-a[0]);}}return pts[pts.length-1][1];}
+function cardioMet(c){
+  if(c==="run"||c==="outrun"){var sp=PF&&PF.runKm>0&&PF.runMin>0?PF.runKm/(PF.runMin/60):8;return runMet(sp);}
+  return {treadmill:5.0,outwalk:4.3,bike:4.0,elliptical:5.0,march:3.5}[c]||4.0;
+}
+function cardioKcal(D,min){
+  if((D.c==="run"||D.c==="outrun")&&min>10)return kcalOf(3.5,10)+kcalOf(cardioMet(D.c),min-10);
+  return kcalOf(cardioMet(D.c),min);
+}
+function dayKcal(w,d,it){
+  var D=sesOf(w,d,it),P=phase(w),cmin=cminOf(D,P),strMin=D.ex.length*P.sets*2.2;
+  var plan=kcalOf(3.0,10)+kcalOf(3.5,strMin)+cardioKcal(D,cmin)+kcalOf(2.5,10);
+  var got=0,tot=D.ex.length*P.sets;D.ex.forEach(function(id){var a=setsOf(w,d,id);for(var i=0;i<P.sets;i++)if(a[i])got++;});
+  var done=(isDone(w,d,"warm")?kcalOf(3.0,10):0)+(tot?kcalOf(3.5,strMin)*got/tot:0)+(isDone(w,d,"cardio")?cardioKcal(D,cmin):0)+(isDone(w,d,"stretch")?kcalOf(2.5,10):0);
+  return {plan:Math.round(plan),done:Math.round(done)};
+}
+function weekKcal(w){var PL=plan(w),s=0;ORDER.forEach(function(d){var it=PL[d];if(it.t==="s")s+=dayKcal(w,d,it).done;});return s;}
+function bowls(k){return (k/300).toFixed(1).replace(/\.0$/,"");}
+function bwPrompt(){
+  var l=(S.bw||[]).filter(function(x){return x.kg>0;}).map(function(x){return x.d;}).sort();var last=l.length?parse(l[l.length-1]):null;
+  if(last&&(today-last)/86400000<7)return "";
+  return '<div class="card bwq"><div class="row"><label for="bwQuick"><b>이번 주 체중</b></label><input id="bwQuick" class="num" type="number" inputmode="decimal" step="0.1" min="30" placeholder="kg" style="width:96px"><button class="btn" id="bwQuickSave">저장</button></div><p class="meta" style="margin:6px 0 0">일주일에 한 번 아침 공복에 재서 적으면, 칼로리 계산과 체중 그래프에 쓰입니다.</p></div>';
+}
+
 function renderTop(){
   var P=phase(week),PL=plan(week),cw=curWeek(),planned=0,done=0;
   ORDER.forEach(function(d){var it=PL[d];if(it.t==="s"){planned++;var pr=dayProgress(week,d,it);if(pr.got===pr.total)done++;}});
   document.getElementById("wkLabel").textContent=week+"주차";
-  document.getElementById("phase").innerHTML='<span class="chip">'+P.name+'</span><span class="num">이번 주 운동 <b>'+done+"/"+planned+'</b> 완료</span>'+(week!==cw?'<button class="linkbtn" id="goNow">이번 주('+cw+'주차)로</button>':"");
+  document.getElementById("phase").innerHTML='<span class="chip">'+P.name+'</span><span class="num">이번 주 운동 <b>'+done+"/"+planned+'</b> 완료 · 약 <b>'+weekKcal(week).toLocaleString()+'</b>kcal</span>'+(week!==cw?'<button class="linkbtn" id="goNow">이번 주('+cw+'주차)로</button>':"");
   var g=document.getElementById("goNow");if(g)g.onclick=function(){week=cw;dayK=todayKey;renderAll();};
   var html="";
   ORDER.forEach(function(d){
@@ -698,8 +727,8 @@ function renderDay(){
   }else{
     var D=sesOf(week,dayK,it),pr=dayProgress(week,dayK,it),pct=Math.round(pr.got/pr.total*100);
     var cmin=cminOf(D,P),C=CARDIO[D.c];
-    h+=head(D.title,esc(D.focus))+'<div class="stats"><span class="stat">예상 <b class="num">'+minutes(week,D)+'</b>분</span>'+(D.ex.length?'<span class="stat">근력 <b class="num">'+D.ex.length+'</b>종목 × <b class="num">'+P.sets+'</b>세트</span>':"")+'<span class="stat">유산소 <b class="num">'+cmin+'</b>분</span><span class="stat">진행 <b class="num">'+pr.got+"/"+pr.total+'</b></span></div><div class="bar"><i style="width:'+pct+'%"></i></div>';
-    h+=drinkBtn()+placeBtns()+skipNote(PL);
+    h+=head(D.title,esc(D.focus))+'<div class="stats"><span class="stat">예상 <b class="num">'+minutes(week,D)+'</b>분</span>'+(D.ex.length?'<span class="stat">근력 <b class="num">'+D.ex.length+'</b>종목 × <b class="num">'+P.sets+'</b>세트</span>':"")+'<span class="stat">유산소 <b class="num">'+cmin+'</b>분</span><span class="stat">진행 <b class="num">'+pr.got+"/"+pr.total+'</b></span>'+(function(){var k=dayKcal(week,dayK,it);return '<span class="stat kc">소모 <b class="num">'+k.done+'</b> / 약 '+k.plan+'kcal <span class="meta">(밥 '+bowls(k.plan)+'공기)</span></span>';})()+'</div><div class="bar"><i style="width:'+pct+'%"></i></div>';
+    h+=bwPrompt()+drinkBtn()+placeBtns()+skipNote(PL);
     if(it.moved)h+='<div class="callout">주중 술약속 때문에 빠진 <b>'+esc(D.title)+'</b> 운동을 보충하는 날입니다.</div>';
     h+='<div class="callout"><b>'+P.name+'</b> · '+esc(P.tip)+'</div>';
     h+='<div class="sec"><h3>1. 준비운동</h3><span>10분</span></div><div class="list">'+(D.out?simpleCard("warm",WARM_OUT.name,"관절 풀기 + 천천히 걷기",WARM_OUT.how,[]):D.home?simpleCard("warm",WARM_HOME.name,"제자리 걷기 + 관절 풀기",WARM_HOME.how,[]):simpleCard("warm",WARM.name,"실내자전거 + 관절 풀기",WARM.how,[]))+"</div>";
@@ -736,6 +765,8 @@ function bindDay(el){
   };});
   el.querySelectorAll("[data-start]").forEach(function(b){b.onclick=function(){say("시작합니다");startEx(b.dataset.start);};});
   el.querySelectorAll("[data-cstart]").forEach(function(b){b.onclick=function(){startCardio();};});
+  var bq=document.getElementById("bwQuickSave");
+  if(bq)bq.onclick=function(){var v=parseFloat(document.getElementById("bwQuick").value);if(!(v>=30&&v<=250))return;var d=ymd(today);var old=S.bw.filter(function(x){return x.d===d;})[0]||{d:d};old.kg=v;S.bw=S.bw.filter(function(x){return x.d!==d;});S.bw.push(old);save();keepScroll(function(){renderDay();renderTop();});};
   var hb=document.getElementById("homeBtn");
   if(hb)hb.onclick=function(){};
   el.querySelectorAll("[data-place]").forEach(function(b){b.onclick=function(){S.home=S.home||{};S.home[week]=S.home[week]||{};var v=b.dataset.place;if(v==="gym")delete S.home[week][dayK];else S.home[week][dayK]=v;save();keepScroll(function(){renderDay();renderTop();});};});
@@ -782,6 +813,7 @@ function renderGuide(){
   '<div class="card"><h3>기구가 없거나 사용 중일 때</h3><ul><li>운동마다 "방법"을 누르면 맨 아래에 대신할 운동이 있습니다.</li><li>"내 정보" 탭의 헬스장 기구 체크에서 "없음"을 누르면 루틴이 대체 운동으로 바뀝니다.</li></ul></div>'+
   '<div class="card"><h3>무게와 강도 정하는 법</h3><ul><li><span class="tag good">근력</span>정해진 횟수를 했을 때 2~3회는 더 할 수 있는 무게. 마지막 몇 회가 힘들어도 자세는 무너지지 않아야 합니다.</li>'+(pr&&pr.light?'<li><span class="tag good">하체</span>20회가 편하게 되는 가벼운 무게로 고정합니다.</li>':"")+'<li><span class="tag good">유산소</span>숨이 차지만 짧은 문장으로 대화할 수 있는 정도.</li><li><span class="tag good">속도</span>올릴 때 1~2초, 내릴 때 2~3초. 숨은 참지 말고 힘쓸 때 내쉽니다.</li></ul></div>'+
   '<div class="card"><h3>시작 전에 권하는 것</h3><ul>'+(Object.keys(inj).length?'<li>다쳤거나 아픈 곳이 있으니, 이 루틴을 담당 의사나 물리치료사에게 한 번 보여주고 시작하세요.</li>':"")+'<li>처음 1~2주 안에 트레이너에게 주요 머신 자세를 한 번 봐달라고 하면 좋습니다.</li><li>감량은 운동만큼 식사 조절이 중요합니다.</li></ul></div>'+
+  '<div class="card"><h3>소모 칼로리는 이렇게 계산합니다</h3><ul><li>운동별 강도(MET) × 3.5 × 최근 체중(kg) ÷ 200 × 운동 시간(분)으로 추정합니다.</li><li>MET 값: 근력운동 3.5, 일립티컬 5.0, 실내자전거 4.0, 경사 걷기 5.0, 빠르게 걷기 4.3, 러닝은 속도에 따라 6~11.8 (시속 8km ≈ 8.3), 스트레칭 2.5.</li><li>세트 체크, 유산소 체크를 한 만큼만 "소모"에 더해집니다.</li><li>평균값으로 낸 추정치라 실제와 ±20% 정도 차이가 날 수 있습니다. 밥 1공기는 약 300kcal로 환산했습니다.</li></ul></div>'+
   '<p class="meta">이 앱의 루틴은 일반적인 운동 지침을 바탕으로 자동으로 짠 것이며 의료 조언이 아닙니다.</p>';
 }
 
