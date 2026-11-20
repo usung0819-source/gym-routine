@@ -113,7 +113,8 @@ main{padding:16px 0 150px}
 .zoomov ul{margin:8px 0 0;padding-left:18px;font-size:13px;color:#14213D}
 .zoomov{overflow-y:auto}
 .pic.real{background:#fff;padding:0;cursor:zoom-in;width:128px;height:90px}
-.zoomov{position:fixed;inset:0;z-index:30;background:rgba(10,14,30,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.zoomov{position:fixed;inset:0;z-index:30;background:rgba(10,14,30,.72);display:flex;align-items:flex-start;justify-content:center;padding:16px}
+.zoomov .zb{margin:auto 0}
 .zoomov .zb{background:#fff;color:#14213D;border-radius:16px;max-width:560px;width:100%;padding:14px}
 .zoomov .zf{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .zoomov .zf figure{margin:0;text-align:center;font-size:13px;font-weight:800}
@@ -278,6 +279,8 @@ body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 .rfig{width:100%;max-width:360px;aspect-ratio:200/140;border-radius:14px;overflow:hidden;background:#F4F7FF;position:relative;border:1px solid var(--line)}
 .rfig svg{width:100%;height:100%;display:block}
 .rfig.real{background:#fff}
+.rfig.two{aspect-ratio:auto;display:grid;grid-template-columns:1fr;gap:6px;background:none;border:0;max-width:290px}
+.rfig.two>svg,.rfig.two .inset svg{width:100%;aspect-ratio:200/140;height:auto;border-radius:12px;border:1px solid var(--line)}
 .rfig.real img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:contain}
 .rmid.hasfig .rbig{font-size:76px}
 .rmid.hasfig .rlabel{font-size:19px}
@@ -384,7 +387,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.6.1"></script>
+<script src="fig.js?v=1.7.1"></script>
 <script>
 (function(){
 "use strict";
@@ -484,7 +487,7 @@ var EX={
   how:["매트에 누워 무릎을 세우고 발은 엉덩이 가까이 둡니다.","엉덩이에 힘을 주며 어깨~무릎이 일직선이 될 때까지 들어 올립니다."],
   ng:["허리를 활처럼 꺾어 더 높이 올리지 않습니다. 일직선까지만."]},
  birddog:{name:"버드독",target:"코어·허리 안정",reps:"좌우 각 6~8회, 5초 유지",kg:false,
-  how:["네발 자세에서 허리는 평평하게 둡니다.","오른팔과 왼다리를 바닥과 수평으로 뻗고 5초 버팁니다. 반대쪽도 같이."],
+  how:["네발 자세: 손은 어깨 바로 밑, 무릎은 엉덩이 바로 밑. 허리는 평평하게 둡니다.","오른팔은 앞으로, 왼다리는 뒤로 바닥과 수평이 되게 뻗고 5초 버팁니다. 몸통과 일직선이 되게, 옆으로 벌어지지 않게 합니다.","정해진 횟수를 다 하면 왼팔·오른다리로 바꿔서 똑같이 합니다."],
   ng:["팔다리를 너무 높이 들어 허리가 꺾이지 않게 합니다.","어깨가 불편하면 다리만 뻗어도 됩니다."]},
  deadbug:{name:"데드버그",target:"복부·코어",reps:"번갈아 좌우 각 6~8회",kg:false,
   how:["누워서 팔은 천장으로 뻗고, 무릎은 90도로 굽혀 듭니다 (정강이가 바닥과 수평).","허리를 바닥에 붙인 채, 오른팔은 머리 위 바닥 쪽으로, 왼다리는 앞으로 쭉 뻗으며 함께 내립니다. 바닥에 닿기 직전에 멈춥니다.","천천히 처음 자세로 돌아온 뒤, 이번에는 왼팔과 오른다리를 내립니다.","이렇게 대각선(반대쪽 팔·다리)으로 번갈아 합니다. 오른쪽·왼쪽 한 번씩이 1회입니다.","내릴 때 숨을 내쉬고, 돌아올 때 들이마십니다."],
@@ -586,7 +589,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.6.1",newVer=null;
+var APP_VER="v1.7.1",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -918,10 +921,13 @@ function zoomPic(id){
   var nm=EX[id]?exName(id):CARDIO[id]?CARDIO[id].name:id,ng=(EX[id]&&EX[id].ng)||(CARDIO[id]&&CARDIO[id].ng)||[];
   var real=REALPIC[id],body;
   if(real)body='<div class="zf"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:8px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p>';
-  else body=figSvg(id,0,"zbig")+'<div class="zf"><figure>'+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
+  else body=(window.POSE3&&POSE3[id]?'<div class="seg" style="grid-template-columns:repeat('+(POSE3[id].views.length+1)+',1fr)">'+["side"].concat(POSE3[id].views).map(function(v,i){return '<button type="button" data-zv="'+v+'" aria-selected="'+(i===0)+'">'+{side:"옆에서",top:"위에서",front:"앞에서"}[v]+'</button>';}).join("")+'</div><p id="zNote" class="meta" style="margin:0 0 6px;font-size:13px;color:#5B6478"></p>':"")+figSvg(id,0,"zbig")+'<div class="zf"><figure>'+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
   var o=document.createElement("div");o.className="zoomov";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");
   o.innerHTML='<div class="zb"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>'+esc(nm)+'</b><button class="btn ghost" style="height:36px">닫기</button></div>'+body+(ng.length?'<b style="display:block;margin-top:10px;color:#E5383B;font-size:14px">다치지 않으려면</b><ul>'+ng.map(function(x){return"<li>"+esc(x)+"</li>";}).join("")+'</ul>':"")+(VID[id]?'<p style="margin:10px 0 0">'+vid(id)+' <span style="font-size:12px;color:#5B6478">KAIST 스포츠센터 초보자용 영상. 이 앱의 주의사항과 다르면 주의사항을 따르세요.</span></p>':"")+'</div>';
-  o.onclick=function(e){if(e.target===o||e.target.tagName==="BUTTON")o.remove();};
+  o.onclick=function(e){
+    var zv=e.target.getAttribute&&e.target.getAttribute("data-zv");
+    if(zv){var sv=o.querySelector("svg.zbig");sv.setAttribute("data-view",zv);o.querySelectorAll("[data-zv]").forEach(function(b){b.setAttribute("aria-selected",String(b===e.target));});o.querySelector("#zNote").textContent=(POSE3[id].note&&POSE3[id].note[zv])||"";return;}
+    if(e.target===o||e.target.tagName==="BUTTON")o.remove();};
   document.body.appendChild(o);
 }
 function keepScroll(fn){var y=window.scrollY;fn();window.scrollTo(0,y);}
@@ -1346,7 +1352,7 @@ document.getElementById("tStop").onclick=function(){clearInterval(tId);tEl.class
 
 
 /* ---------- 자동 진행 (시작 버튼) ---------- */
-var AUTO={legpress:{r:20},legcurl:{r:20},abduct:{r:20},bridge:{r:15,h:2},birddog:{r:8,h:5,s:2},deadbug:{r:8,alt:["오른팔·왼다리 내리기","왼팔·오른다리 내리기"]},sideplank:{r:1,h:20,s:2},curlup:{r:8,h:8},pallof:{r:10,s:2},pulldown:{r:15},row:{r:15},chestpress:{r:15},curl:{r:15},pushdown:{r:15}};
+var AUTO={legpress:{r:20},legcurl:{r:20},abduct:{r:20},bridge:{r:15,h:2},birddog:{r:8,h:5,s:2,names:["오른팔·왼다리","왼팔·오른다리"]},deadbug:{r:8,alt:["오른팔·왼다리 내리기","왼팔·오른다리 내리기"]},sideplank:{r:1,h:20,s:2},curlup:{r:8,h:8},pallof:{r:10,s:2},pulldown:{r:15},row:{r:15},chestpress:{r:15},curl:{r:15},pushdown:{r:15}};
 var NUM=["하나","둘","셋","넷","다섯","여섯","일곱","여덟","아홉","열","열하나","열둘","열셋","열넷","열다섯","열여섯","열일곱","열여덟","열아홉","스물"];
 
 var RUN=null, runTimer=null, wake=null;
@@ -1389,6 +1395,7 @@ function buildSteps(id,sets,from){
     if(i<sets-1)st.push({k:"rest",label:"휴식",dur:S.rest*1000,set:i,cd:true});
   }
   st.push({k:"end",dur:0});
+  if(A.names)st.forEach(function(x){if(x.side==="왼쪽")x.side=A.names[0];else if(x.side==="오른쪽"){x.side=A.names[1];x.alt=true;}});
   return st;
 }
 function cardioSteps(kind,min){
@@ -1412,7 +1419,7 @@ function figInit(c){
   cue.hidden=!c.cue;cue.textContent=c.cue?"⚠ "+c.cue:"";
   if(!has){box.innerHTML="";return;}
   if(REALPIC[id]){box.className="rfig real";box.innerHTML='<img src="img/ex/'+id+'-1.svg" alt=""><img id="rFig2" src="img/ex/'+id+'-2.svg" alt="" style="opacity:0">';}
-  else{box.className="rfig";box.innerHTML='<svg viewBox="0 0 200 140" aria-hidden="true">'+figBody(id,0)+'</svg>';}
+  else{box.className="rfig"+(window.POSE3&&POSE3[id]?" two":"");box.innerHTML='<svg viewBox="0 0 200 140" aria-hidden="true">'+figBody(id,0)+'</svg>'+(window.POSE3&&POSE3[id]?'<div class="inset"><svg viewBox="0 0 200 140" aria-hidden="true">'+fig3Body(id,POSE3[id].views[0],0)+'</svg></div>':"");}
 }
 function figPos(now){
   var s=RUN.steps[RUN.i];if(!s)return 0;
@@ -1433,7 +1440,8 @@ function figLoop(now){
   var id=RUN.ctx.fig;if(!id)return;
   var t=figPos(now);
   if(REALPIC[id]){var f=document.getElementById("rFig2");if(f)f.style.opacity=t.toFixed(2);}
-  else if(window.POSES&&POSES[id]){var sv=document.querySelector("#rFig svg"),st=RUN.steps[RUN.i];if(sv)sv.innerHTML=figBody(id,t,st&&st.alt);}
+  else if(window.POSES&&POSES[id]){var sv=document.querySelector("#rFig svg"),st=RUN.steps[RUN.i];if(sv)sv.innerHTML=figBody(id,t,st&&st.alt);
+    var iv=document.querySelector("#rFig .inset svg");if(iv)iv.innerHTML=fig3Body(id,POSE3[id].views[0],t,st&&st.alt);}
 }
 function runNext(){
   if(!RUN)return;

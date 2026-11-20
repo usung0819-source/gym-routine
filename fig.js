@@ -79,7 +79,9 @@ var POSES={
   f:[{hip:[114.8,70.5],t:-70,ua:8,fa:8,th:110,sh:110,ft:0,face:1},{hip:[127,77],t:-56,ua:42,fa:-88,th:118,sh:118,ft:0,face:1}]},
  birddog:{bg:MAT,f:[
   {hip:[70,95],t:-15,ua:90,fa:90,ua2:90,fa2:90,th:90,sh:180,ft:170,th2:90,sh2:180,ft2:170,face:1},
-  {hip:[70,95],t:-15,ua:-12,fa:-12,ua2:90,fa2:90,th:90,sh:180,ft:170,th2:178,sh2:178,ft2:178,face:1}]},
+  {hip:[70,95],t:-15,ua:-12,fa:-12,ua2:90,fa2:90,th:90,sh:180,ft:170,th2:178,sh2:178,ft2:178,face:1}],
+  f2:[{hip:[70,95],t:-15,ua:90,fa:90,ua2:90,fa2:90,th:90,sh:180,ft:170,th2:90,sh2:180,ft2:170,face:1},
+  {hip:[70,95],t:-15,ua:90,fa:90,ua2:-12,fa2:-12,th:178,sh:178,ft:178,th2:90,sh2:180,ft2:170,face:1}]},
  deadbug:{bg:MAT,f:[
   {hip:[78,117],t:0,hd:2,ua:-90,fa:-90,th:-90,sh:180,ft:180,face:1,lie:1},
   {hip:[78,117],t:0,hd:2,ua:-8,fa:-6,ua2:-90,fa2:-90,th:-90,sh:180,ft:180,th2:177,sh2:178,ft2:200,face:1,lie:1}],
@@ -133,8 +135,8 @@ POSES.shoulderpress={bg:FLOOR,
   f:[{hip:[82,96],t:-90,ua:95,fa:-95,th:0,sh:88,ft:0,face:1},{hip:[82,96],t:-90,ua:-86,fa:-88,th:0,sh:88,ft:0,face:1}]};
 POSES.pecdeck={front:1,bg:FLOOR,
   m:function(J){return R(84,22,32,72,MD,5)+R(78,96,44,7,MP)+R(97,103,6,25,MP)+R(80,124,40,4,MP)+R(30,4,140,6,MD)+R(30,4,6,124,MD)+R(164,4,6,124,MD);},
-  fg:function(J){return R(J.eL[0]-4,J.wL[1]-2,8,J.eL[1]-J.wL[1]+6,MP,3)+R(J.eR[0]-4,J.wR[1]-2,8,J.eR[1]-J.wR[1]+6,MP,3);},
-  f:[{hip:[100,94],seated:1,uaL:180,faL:-90,uaR:0,faR:-90},{hip:[100,94],seated:1,uaL:-25,faL:-90,uaR:205,faR:-90}]};
+  fg:function(J){return R(J.wL[0]-3,J.wL[1]-9,6,18,MP,2)+R(J.wR[0]-3,J.wR[1]-9,6,18,MP,2);},
+  f:[{hip:[100,94],seated:1,uaL:178,faL:184,uaR:2,faR:-4},{hip:[100,94],seated:1,uaL:12,faL:-4,uaR:168,faR:184}]};
 POSES.reardelt={front:1,bg:FLOOR,
   m:function(J){return R(78,96,44,7,MP)+R(97,103,6,25,MP)+R(80,124,40,4,MP)+R(30,4,140,6,MD)+R(30,4,6,124,MD)+R(164,4,6,124,MD);},
   fg:function(J){return R(J.wL[0]-3,J.wL[1]-8,6,16,MP,2)+R(J.wR[0]-3,J.wR[1]-8,6,16,MP,2);},
@@ -162,8 +164,114 @@ function figSvg(id,t,cls,alt){return '<svg viewBox="0 0 200 140" class="'+(cls||
     var H=window.innerHeight;
     document.querySelectorAll("svg[data-fig]:not(.still)").forEach(function(s){
       var r=s.getBoundingClientRect();if(r.bottom<0||r.top>H||!r.width)return;
-      var id=s.getAttribute("data-fig");s.innerHTML=figBody(id,figT(id,now),Math.floor(now/3800)%2===1);
+      var id=s.getAttribute("data-fig"),vw=s.getAttribute("data-view"),al=Math.floor(now/3800)%2===1;
+      s.innerHTML=(vw&&vw!=="side"&&window.POSE3&&POSE3[id])?fig3Body(id,vw,figT(id,now),al):figBody(id,figT(id,now),al);
     });
   }
   requestAnimationFrame(loop);
 })();
+
+/* ---------- 3D 사람 (여러 각도) ----------
+   좌표: x=앞(머리 방향), y=위, z=옆. 각 자세는 관절 방향/목표점으로 정의하고, 보는 방향(옆/위/앞)으로 투영 */
+var F3=(function(){
+  var L={sh:34,neck:4,hd:15,shw:9,hpw:6,ua:21,fa:19,th:30,sn:28,ft:11};
+  function add(a,b){return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];}
+  function sub(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+  function mul(a,k){return [a[0]*k,a[1]*k,a[2]*k];}
+  function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+  function len(a){return Math.sqrt(dot(a,a));}
+  function nrm(a){var l=len(a)||1;return mul(a,1/l);}
+  function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+  function ik(S,T,l1,l2,hint){
+    var d=sub(T,S),D=Math.min(len(d),l1+l2-0.01),u=nrm(d);
+    var a=(l1*l1-l2*l2+D*D)/(2*D),h=Math.sqrt(Math.max(0,l1*l1-a*a));
+    var hp=nrm(sub(hint,mul(u,dot(hint,u))));
+    var E=add(add(S,mul(u,a)),mul(hp,h));return [E,add(S,mul(u,D))];
+  }
+  function limb(S,o,k1,k2,l1,l2,tg,hn){
+    if(o[tg])return ik(S,o[tg],l1,l2,o[hn]||[0,-1,0]);
+    var E=add(S,mul(nrm(o[k1]),l1));return [E,add(E,mul(nrm(o[k2]||o[k1]),l2))];
+  }
+  function joints(o){
+    var T=nrm(o.T),F=nrm(o.F),R=nrm(cross(F,T)),H=o.H;
+    var SC=add(H,mul(T,L.sh)),N=add(H,mul(T,L.sh+L.neck)),HD=add(N,mul(T,L.hd-6));
+    var sR=add(SC,mul(R,L.shw)),sL=add(SC,mul(R,-L.shw)),hR=add(H,mul(R,L.hpw)),hL=add(H,mul(R,-L.hpw));
+    var aR=limb(sR,o,"uaR","faR",L.ua,L.fa,"handR","elR"),aL=limb(sL,o,"uaL","faL",L.ua,L.fa,"handL","elL");
+    var lR=limb(hR,o,"thR","snR",L.th,L.sn,"ankR","knR"),lL=limb(hL,o,"thL","snL",L.th,L.sn,"ankL","knL");
+    var tR=add(lR[1],mul(nrm(o.ftR||F),L.ft)),tL=add(lL[1],mul(nrm(o.ftL||F),L.ft));
+    return {T:T,F:F,R:R,H:H,SC:SC,N:N,HD:HD,sR:sR,sL:sL,hR:hR,hL:hL,eR:aR[0],wR:aR[1],eL:aL[0],wL:aL[1],kR:lR[0],aR:lR[1],kL:lL[0],aL:lL[1],tR:tR,tL:tL};
+  }
+  function mix(A,B,t){var o={},k,K={};for(k in A)K[k]=1;for(k in B)K[k]=1;
+    for(k in K){var a=A[k]||B[k],b=B[k]||A[k];if(Array.isArray(a))o[k]=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];else o[k]=a;}return o;}
+  var VIEW={
+    side:function(p){return [100+p[0],128-p[1],p[2]];},
+    top:function(p){return [100+p[0],70+p[2],p[1]];},
+    front:function(p){return [100-p[2],128-p[1],p[0]];}
+  };
+  function seg(a,b,w,c,c2,mid){return {a:a,b:b,w:w,c:c,c2:c2,d:(a[2]+b[2])/2};}
+  function draw(o,view,ox){
+    var J=joints(o),V=VIEW[view],P=function(p){var q=V(p);return [q[0]+(ox||0),q[1],q[2]];},C=FIG.C,list=[];
+    var cen=P(J.SC)[2]*0.5+P(J.H)[2]*0.5;
+    function L2(a,b,w,c,c2){list.push(seg(P(a),P(b),w,c,c2));}
+    L2(J.hR,J.kR,13,C.pants,C.pants2);L2(J.kR,J.aR,10,C.skin,C.skin2);L2(J.aR,J.tR,7,C.shoe,C.shoe);
+    L2(J.hL,J.kL,13,C.pants,C.pants2);L2(J.kL,J.aL,10,C.skin,C.skin2);L2(J.aL,J.tL,7,C.shoe,C.shoe);
+    L2(J.sR,J.eR,9.5,C.shirt,C.shirt2);L2(J.eR,J.wR,7.5,C.skin,C.skin2);L2(J.sL,J.eL,9.5,C.shirt,C.shirt2);L2(J.eL,J.wL,7.5,C.skin,C.skin2);
+    var tq=[P(J.sR),P(J.sL),P(J.hL),P(J.hR)],td=(tq[0][2]+tq[1][2]+tq[2][2]+tq[3][2])/4;
+    list.push({torso:tq,d:td});
+    var hd=P(J.HD);list.push({head:hd,d:hd[2]+0.01});
+    list.sort(function(a,b){return a.d-b.d;});
+    var s="";
+    list.forEach(function(g){
+      if(g.torso){var q=g.torso,pts=q.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1);}).join(" ");
+        s+='<polygon points="'+pts+'" fill="'+C.shirt+'" stroke="'+C.shirt+'" stroke-width="14" stroke-linejoin="round"/>';
+        var hp=[P(J.hL),P(J.hR)];s+='<line x1="'+hp[0][0].toFixed(1)+'" y1="'+hp[0][1].toFixed(1)+'" x2="'+hp[1][0].toFixed(1)+'" y2="'+hp[1][1].toFixed(1)+'" stroke="'+C.pants+'" stroke-width="15" stroke-linecap="round"/>';return;}
+      if(g.head){var f=P(add(J.HD,mul(J.F,4))),b=P(add(add(J.HD,mul(J.F,-3.5)),mul(J.T,1.5)));
+        var faceNear=f[2]>=b[2];
+        var hair='<circle cx="'+b[0].toFixed(1)+'" cy="'+b[1].toFixed(1)+'" r="8" fill="'+C.hair+'"/>',face='<circle cx="'+((g.head[0]*2+f[0])/3).toFixed(1)+'" cy="'+((g.head[1]*2+f[1])/3).toFixed(1)+'" r="8.2" fill="'+C.skin+'"/>';
+        s+=faceNear?hair+face:face+hair;return;}
+      var far=g.d<cen-3,c=far?g.c2:g.c;
+      s+='<line x1="'+g.a[0].toFixed(1)+'" y1="'+g.a[1].toFixed(1)+'" x2="'+g.b[0].toFixed(1)+'" y2="'+g.b[1].toFixed(1)+'" stroke="'+c+'" stroke-width="'+g.w+'" stroke-linecap="round"/>';
+      if(g.w===7.5)s+='<circle cx="'+g.b[0].toFixed(1)+'" cy="'+g.b[1].toFixed(1)+'" r="4.2" fill="'+c+'"/>';
+    });
+    return {svg:s,J:J,P:P};
+  }
+  return {draw:draw,mix:mix,add:add,mul:mul,VIEW:VIEW};
+})();
+
+/* 여러 각도가 필요한 운동: 3D 자세 (시작, 끝, 끝-반대쪽) */
+var UP=[0,1,0],DN=[0,-1,0],FW=[1,0,0],BK=[-1,0,0];
+var POSE3={
+ deadbug:{views:["top"],note:{top:"위에서 본 모습: 오른팔과 왼다리처럼 대각선으로 함께 내립니다"},
+  s:{H:[-12,9,0],T:FW,F:UP,uaR:UP,uaL:UP,thR:UP,thL:UP,snR:BK,snL:BK,ftR:[-1,0.4,0],ftL:[-1,0.4,0]},
+  e:{uaL:[1,0.12,0],thR:[-1,0.1,0],snR:[-1,0.06,0],ftR:[-0.3,1,0]},
+  e2:{uaR:[1,0.12,0],thL:[-1,0.1,0],snL:[-1,0.06,0],ftL:[-0.3,1,0]}},
+ birddog:{views:["top"],note:{top:"위에서 본 모습: 팔과 반대쪽 다리를 몸통과 일직선으로 뻗습니다. 옆으로 벌어지지 않게"},
+  s:{H:[-17,35,0],T:[0.98,0.2,0],F:[0.25,-1,0],uaR:DN,uaL:DN,thR:DN,thL:DN,snR:BK,snL:BK,ftR:[-1,0.1,0],ftL:[-1,0.1,0]},
+  e:{uaR:[1,0.08,0],faR:[1,0.08,0],thL:[-1,0.12,0],snL:[-1,0.12,0],ftL:[0,-1,0]},
+  e2:{uaL:[1,0.08,0],faL:[1,0.08,0],thR:[-1,0.12,0],snR:[-1,0.12,0],ftR:[0,-1,0]}},
+ chairsquat:{views:["front"],inv:1,note:{front:"앞에서 본 모습: 무릎이 발끝 방향을 따라가게, 안쪽으로 모이지 않게"},
+  prop:{front:function(P){var a=P([-36,34,-16]),b=P([-36,34,16]);return R(a[0],a[1]-2,b[0]-a[0],6,MD)+R(a[0]+2,a[1]+4,4,a[1]>0?128-a[1]-4:0,MP)+R(b[0]-6,b[1]+4,4,128-b[1]-4,MP)+R(a[0],a[1]-44,b[0]-a[0],5,MC);},
+        side:function(P){var a=P([-50,34,0]),b=P([-20,34,0]);return R(a[0],a[1]-2,b[0]-a[0],6,MD)+R(a[0]+2,a[1]+4,4,128-a[1]-4,MP)+R(b[0]-6,b[1]+4,4,128-b[1]-4,MP)+R(a[0],a[1]-42,5,42,MD);}},
+  s:{H:[0,61,0],T:UP,F:FW,thR:[0,-1,0.08],thL:[0,-1,-0.08],snR:[0,-1,0.04],snL:[0,-1,-0.04],ftR:[1,0,0.25],ftL:[1,0,-0.25],uaR:FW,uaL:FW},
+  e:{H:[-25,37,0],T:[0.6,0.8,0],ankR:[1,3,11],ankL:[1,3,-11],knR:[1,0.3,0.45],knL:[1,0.3,-0.45],uaR:[1,0.15,0],uaL:[1,0.15,0]}},
+ wallpush:{views:["top"],inv:1,note:{top:"위에서 본 모습: 팔꿈치는 몸통에서 45도 정도. 옆으로 활짝 벌리지 않습니다"},
+  prop:{top:function(P){var a=P([69,0,-60]);return R(a[0],8,30,124,"#C9D1E0",0)+R(a[0],8,3,124,MC,0);},side:function(P){var a=P([69,0,0]);return R(a[0],0,32,128,"#C9D1E0",0);}},
+  s:{H:[14.8,57.5,0],T:[0.342,0.94,0],F:[0.94,-0.342,0],ankR:[-5,3,9],ankL:[-5,3,-9],knR:[0,0,1],knL:[0,0,-1],ftR:FW,ftL:FW,handR:[66,84,14],handL:[66,84,-14],elR:[0,-0.5,1],elL:[0,-0.5,-1]},
+  e:{H:[27.4,51.1,0],T:[0.559,0.829,0],F:[0.829,-0.559,0],handR:[66,84,14],handL:[66,84,-14],elR:[-0.55,-0.8,0.32],elL:[-0.55,-0.8,-0.32]}},
+ pallof:{views:["top"],note:{top:"위에서 본 모습: 케이블이 옆에서 당겨도 몸통이 돌아가지 않게 버티며 앞으로 밉니다"},
+  prop:{top:function(P,J){var c=P([0,60,-58]),h=P(J.wR);return R(c[0]-6,c[1]-6,12,12,MD,3)+'<line x1="'+c[0]+'" y1="'+c[1]+'" x2="'+h[0].toFixed(1)+'" y2="'+h[1].toFixed(1)+'" stroke="#333" stroke-width="1.5"/>';}},
+  s:{H:[0,61,0],T:UP,F:FW,thR:[0,-1,0.12],thL:[0,-1,-0.12],snR:DN,snL:DN,ftR:FW,ftL:FW,handR:[12,90,1],handL:[12,90,-1],elR:[-0.3,-1,0.3],elL:[-0.3,-1,-0.3]},
+  e:{handR:[42,92,1],handL:[42,92,-1],elR:[0,-1,0.2],elL:[0,-1,-0.2]}},
+ pulldown:{views:["front"],note:{front:"앞에서 본 모습: 어깨너비보다 조금 넓게 잡고, 바를 머리 앞쪽으로 쇄골까지 당깁니다"},
+  prop:{front:function(P,J){var a=P(J.wR),b=P(J.wL),s1=P([-5,30,-20]),s2=P([-5,30,20]);return R(s1[0],s1[1],s2[0]-s1[0],6,MD)+R(96,s1[1]+6,8,128-s1[1]-6,MP)+R(60,4,80,6,MD)+'<line x1="100" y1="10" x2="100" y2="'+a[1].toFixed(1)+'" stroke="#333" stroke-width="1.5"/>'+R(Math.min(a[0],b[0])-8,a[1]-2,Math.abs(b[0]-a[0])+16,5,MP,2);}},
+  s:{H:[0,35,0],T:[-0.15,1,0],F:FW,thR:[1,0,0.12],thL:[1,0,-0.12],snR:DN,snL:DN,ftR:FW,ftL:FW,handR:[3,108,24],handL:[3,108,-24],elR:[0,0,1],elL:[0,0,-1]},
+  e:{handR:[8,70,22],handL:[8,70,-22],elR:[-0.2,-1,0.6],elL:[-0.2,-1,-0.6]}}
+};
+var MAT3={top:R(20,40,160,60,"#CFE3DA",8),side:MAT,front:FLOOR};
+function fig3Body(id,view,t,alt){
+  var X=POSE3[id];if(!X)return "";
+  var A=X.s,B=F3.mix(X.s,(alt&&X.e2)?X.e2:X.e,1),P=F3.mix(A,B,t);
+  var bg=(id==="deadbug"||id==="birddog")?MAT3[view]:(view==="top"?R(0,0,200,140,"#E8EDF7",0):FLOOR);
+  var d=F3.draw(P,view),pr=X.prop&&X.prop[view]?X.prop[view](d.P,d.J):"";
+  return '<rect width="200" height="140" fill="#F4F7FF"/>'+bg+(view==="top"?"":pr)+(view==="top"?pr:"")+d.svg+'<text x="6" y="14" font-size="10" font-weight="700" fill="#5B6478">'+({top:"위에서",front:"앞에서",side:"옆에서"}[view])+'</text>';
+}
