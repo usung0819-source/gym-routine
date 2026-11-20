@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 관리자(성현님) 계정의 UID
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "GIlHb8YB0kTttDo0lHdmMrRJr062";
+    }
+    function isSelf(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    // 관리자가 승인한 사람인지
+    function isApproved() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/approved/$(request.auth.uid));
+    }
+
+    // 개인 운동 기록: 본인 + (승인됨 또는 관리자)만
+    match /users/{uid} {
+      allow read, delete: if isSelf(uid) && (isApproved() || isAdmin());
+      allow create, update: if isSelf(uid) && (isApproved() || isAdmin())
+        && request.resource.data.keys().hasOnly(['json', 'updatedAt'])
+        && request.resource.data.json is string
+        && request.resource.data.json.size() < 900000;
+    }
+
+    // 가입 신청: 본인이 자기 신청서만 작성, 관리자는 전체 조회·삭제
+    match /requests/{uid} {
+      allow create, update: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(['email', 'createdAt'])
+        && request.resource.data.email == request.auth.token.email;
+      allow read: if isSelf(uid) || isAdmin();
+      allow delete: if isSelf(uid) || isAdmin();
+    }
+
+    // 승인 명단: 관리자만 쓰기, 본인은 자기 승인 여부만 조회
+    match /approved/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['email', 'at']);
+      allow delete: if isAdmin();
+    }
+
+    // 친구 순위표: 승인된 사람끼리 이번 주 요약만 공유 (체중·아픈 곳 없음)
+    match /board/{uid} {
+      allow read: if request.auth != null && (isApproved() || isAdmin());
+      allow create, update: if isSelf(uid) && (isApproved() || isAdmin())
+        && request.resource.data.keys().hasOnly(['name', 'wk', 'done', 'planned', 'kcal', 'streak', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 20
+        && request.resource.data.wk is string && request.resource.data.wk.size() <= 10
+        && request.resource.data.done is int && request.resource.data.planned is int
+        && request.resource.data.kcal is int && request.resource.data.streak is int;
+      allow delete: if isSelf(uid) || isAdmin();
+    }
+
+    // 그 밖의 모든 경로는 막습니다.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
