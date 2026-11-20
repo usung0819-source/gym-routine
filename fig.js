@@ -6,7 +6,9 @@ var FIG=(function(){
   function lerp(a,b,t){return a+(b-a)*t;}
   function lerpA(a,b,t){var d=((b-a+540)%360)-180;return a+d*t;}
   function mix(A,B,t){
-    var o={},k;for(k in A){var a=A[k],b=B[k]===undefined?a:B[k];
+    var o={},k,K={};for(k in A)K[k]=1;for(k in B)K[k]=1;
+    function fb(X,k){if(X[k]!==undefined)return X[k];var b=k.replace(/2$/,"");if(X[b]!==undefined)return X[b];return (b==="ft")?0:undefined;}
+    for(k in K){var a=fb(A,k),b=fb(B,k);if(a===undefined)a=b;if(b===undefined)b=a;
       if(Array.isArray(a))o[k]=[lerp(a[0],b[0],t),lerp(a[1],b[1],t)];
       else if(typeof a==="number")o[k]=(k==="x"||k==="y")?lerp(a,b,t):lerpA(a,b,t);else o[k]=a;}
     return o;
@@ -80,7 +82,9 @@ var POSES={
   {hip:[70,95],t:-15,ua:-12,fa:-12,ua2:90,fa2:90,th:90,sh:180,ft:170,th2:178,sh2:178,ft2:178,face:1}]},
  deadbug:{bg:MAT,f:[
   {hip:[78,117],t:0,hd:2,ua:-90,fa:-90,th:-90,sh:180,ft:180,face:1,lie:1},
-  {hip:[78,117],t:0,hd:2,ua:-20,fa:-15,ua2:-90,fa2:-90,th:-90,sh:180,ft:180,th2:178,sh2:180,ft2:200,face:1,lie:1}]},
+  {hip:[78,117],t:0,hd:2,ua:-8,fa:-6,ua2:-90,fa2:-90,th:-90,sh:180,ft:180,th2:177,sh2:178,ft2:200,face:1,lie:1}],
+  f2:[{hip:[78,117],t:0,hd:2,ua:-90,fa:-90,th:-90,sh:180,ft:180,face:1,lie:1},
+  {hip:[78,117],t:0,hd:2,ua:-90,fa:-90,ua2:-8,fa2:-6,th:177,sh:178,ft:200,th2:-90,sh2:180,ft2:180,face:1,lie:1}]},
  sideplank:{bg:MAT,f:[
   {hip:[90,119],t:-25,ua:90,fa:0,th:172,sh:205,ft:180,face:1},
   {hip:[88.5,110],t:-18,ua:90,fa:0,th:162,sh:205,ft:180,face:1}]},
@@ -142,12 +146,13 @@ function figT(id,ms){
   var x=ms%3800,e=function(u){return u*u*(3-2*u);};
   if(x<800)return 0;if(x<1800)return e((x-800)/1000);if(x<2400)return 1;if(x<3600)return 1-e((x-2400)/1200);return 0;
 }
-function figBody(id,t){
+function figBody(id,t,alt){
   var X=POSES[id];if(!X)return "";
-  var P=X.front?FIG.mixF(X.f[0],X.f[1],t):FIG.mix(X.f[0],X.f[1],t),p=X.front?FIG.front(P):FIG.person(P);
+  var F=(alt&&X.f2)?X.f2:X.f;
+  var P=X.front?FIG.mixF(F[0],F[1],t):FIG.mix(F[0],F[1],t),p=X.front?FIG.front(P):FIG.person(P);
   return '<rect width="200" height="140" fill="#F4F7FF"/>'+(X.bg||"")+(X.m?X.m(p.J):"")+p.svg+(X.fg?X.fg(p.J):"");
 }
-function figSvg(id,t,cls){return '<svg viewBox="0 0 200 140" class="'+(cls||"")+'" data-fig="'+id+'" preserveAspectRatio="xMidYMid meet">'+figBody(id,t||0)+'</svg>';}
+function figSvg(id,t,cls,alt){return '<svg viewBox="0 0 200 140" class="'+(cls||"")+'" data-fig="'+id+'" preserveAspectRatio="xMidYMid meet">'+figBody(id,t||0,alt)+'</svg>';}
 (function(){
   var still=false;try{still=window.matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
   var last=0;
@@ -157,7 +162,7 @@ function figSvg(id,t,cls){return '<svg viewBox="0 0 200 140" class="'+(cls||"")+
     var H=window.innerHeight;
     document.querySelectorAll("svg[data-fig]:not(.still)").forEach(function(s){
       var r=s.getBoundingClientRect();if(r.bottom<0||r.top>H||!r.width)return;
-      s.innerHTML=figBody(s.getAttribute("data-fig"),figT(s.getAttribute("data-fig"),now));
+      var id=s.getAttribute("data-fig");s.innerHTML=figBody(id,figT(id,now),Math.floor(now/3800)%2===1);
     });
   }
   requestAnimationFrame(loop);
