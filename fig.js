@@ -71,9 +71,9 @@ function Ci(p,r,c){return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1
 var FLOOR=R(0,128,200,12,"#DCE3F1",0);
 var MAT=R(18,126,164,4,"#7FB3A0",2)+FLOOR;
 var POSES={
- chairsquat:{bg:FLOOR,m:function(){return R(48,94,36,6,MD)+R(50,100,4,28,MP)+R(78,100,4,28,MP)+R(48,52,5,46,MD);},
+ chairsquat:{inv:1,bg:FLOOR,m:function(){return R(48,94,36,6,MD)+R(50,100,4,28,MP)+R(78,100,4,28,MP)+R(48,52,5,46,MD);},
   f:[{hip:[100,67],t:-90,ua:-5,fa:-5,th:90,sh:90,ft:0,face:1},{hip:[82,93],t:-55,ua:-15,fa:-10,th:8,sh:98,ft:0,face:1}]},
- wallpush:{bg:FLOOR,m:function(){return R(168,0,32,128,"#C9D1E0",0)+R(168,0,3,128,MC,0);},
+ wallpush:{inv:1,bg:FLOOR,m:function(){return R(168,0,32,128,"#C9D1E0",0)+R(168,0,3,128,MC,0);},
   f:[{hip:[114.8,70.5],t:-70,ua:8,fa:8,th:110,sh:110,ft:0,face:1},{hip:[127,77],t:-56,ua:42,fa:-88,th:118,sh:118,ft:0,face:1}]},
  birddog:{bg:MAT,f:[
   {hip:[70,95],t:-15,ua:90,fa:90,ua2:90,fa2:90,th:90,sh:180,ft:170,th2:90,sh2:180,ft2:170,face:1},

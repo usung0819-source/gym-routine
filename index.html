@@ -275,6 +275,13 @@ body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 .rclose{border:1px solid var(--line);background:var(--surface);border-radius:10px;height:40px;padding:0 14px;font-weight:700}
 .rmid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 16px}
 .rlabel{font-size:22px;font-weight:800}
+.rfig{width:100%;max-width:360px;aspect-ratio:200/140;border-radius:14px;overflow:hidden;background:#F4F7FF;position:relative;border:1px solid var(--line)}
+.rfig svg{width:100%;height:100%;display:block}
+.rfig.real{background:#fff}
+.rfig.real img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:contain}
+.rmid.hasfig .rbig{font-size:76px}
+.rmid.hasfig .rlabel{font-size:19px}
+#rCue{margin:0;max-width:360px}
 .rbig{font-family:var(--display);font-size:120px;line-height:1.05;color:var(--accent)}
 .rbig.k-rest,.rbig.k-ready{color:var(--good)}
 .rbig.k-hold{color:var(--warn)}
@@ -348,6 +355,8 @@ window.dispatchEvent(new Event("fb-ready"));
   <div class="rin">
     <div class="rtop"><div><div class="rname" id="rName"></div><div class="rset num" id="rSet"></div></div><button class="rclose" id="rClose">닫기</button></div>
     <div class="rmid">
+      <div class="rfig" id="rFig" hidden></div>
+      <p class="cue" id="rCue" hidden></p>
       <div class="rlabel" id="rLabel"></div>
       <div class="rbig num" id="rBig"></div>
       <div class="rsub" id="rSub"></div>
@@ -375,7 +384,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.5.0"></script>
+<script src="fig.js?v=1.6.0"></script>
 <script>
 (function(){
 "use strict";
@@ -577,7 +586,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.5.0",newVer=null;
+var APP_VER="v1.6.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -1346,6 +1355,7 @@ function say(t){if(!S.voice||!t)return;try{var u=new SpeechSynthesisUtterance(t)
 function beep(f,len){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f||880;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.2,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+(len||.25));o.start();o.stop(ac.currentTime+(len||.25));}catch(e){}}
 function buildSteps(id,sets,from){
   var A=(AUTO[id]&&(AUTO[id].h||AUTO[id].s))?AUTO[id]:{r:repMax(repsOf(id))},st=[],up=S.tempo==="fast"?1000:1500,dn=S.tempo==="fast"?2000:2500,sides=A.s||1;
+  var inv={chairsquat:{d:"천천히 앉기",u:"일어나기"},wallpush:{d:"천천히 다가가기",u:"밀어내기"}}[id];
   for(var i=from;i<sets;i++){
     st.push({k:"ready",label:i===from?"준비":"다음 세트",dur:i===from?5000:3000,say:i===from?"준비":"다음 세트",set:i,cd:true});
     for(var s=0;s<sides;s++){
@@ -1357,6 +1367,9 @@ function buildSteps(id,sets,from){
           st.push({k:"up",label:"올리기",dur:2000,big:r,say:NUM[r-1],set:i,side:side});
           st.push({k:"hold",label:"버티기",dur:A.h*1000,set:i,side:side,cd:true,small:r});
           st.push({k:"down",label:"내리기",dur:2000,big:r,set:i,side:side});
+        }else if(inv){
+          st.push({k:"down",label:inv.d,dur:dn,big:r,set:i,side:side});
+          st.push({k:"up",label:inv.u,dur:up,big:r,say:NUM[r-1],set:i,side:side});
         }else{
           st.push({k:"up",label:"올리기",dur:up,big:r,say:NUM[r-1],set:i,side:side});
           st.push({k:"down",label:"천천히 내리기",dur:dn,big:r,set:i,side:side});
@@ -1378,7 +1391,40 @@ function runOpen(ctx,steps){
   RUN={ctx:ctx,steps:steps,i:-1,end:0,paused:false,lastSec:-1};
   rEl.hidden=false;document.body.style.overflow="hidden";
   try{if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(w){wake=w;}).catch(function(){});}catch(e){}
-  beep(660,.15);runNext();clearInterval(runTimer);runTimer=setInterval(runTick,100);
+  beep(660,.15);figInit(ctx);runNext();clearInterval(runTimer);runTimer=setInterval(runTick,100);
+  if(!figOn){figOn=true;requestAnimationFrame(figLoop);}
+}
+/* ---------- 시작 화면 가이드 애니메이션 (숫자 세는 박자에 맞춰 움직임) ---------- */
+var figLast=0,figOn=false;
+function figInit(c){
+  var box=document.getElementById("rFig"),cue=document.getElementById("rCue"),mid=box.parentNode,id=c.fig;
+  var has=id&&(REALPIC[id]||(window.POSES&&POSES[id]));
+  box.hidden=!has;mid.classList.toggle("hasfig",!!has);
+  cue.hidden=!c.cue;cue.textContent=c.cue?"⚠ "+c.cue:"";
+  if(!has){box.innerHTML="";return;}
+  if(REALPIC[id]){box.className="rfig real";box.innerHTML='<img src="img/ex/'+id+'-1.svg" alt=""><img id="rFig2" src="img/ex/'+id+'-2.svg" alt="" style="opacity:0">';}
+  else{box.className="rfig";box.innerHTML='<svg viewBox="0 0 200 140" aria-hidden="true">'+figBody(id,0)+'</svg>';}
+}
+function figPos(now){
+  var s=RUN.steps[RUN.i];if(!s)return 0;
+  var e=function(u){u=Math.max(0,Math.min(1,u));return u*u*(3-2*u);};
+  if(RUN.ctx.cardio)return (s.k==="cr"||s.k==="cw")?figT(RUN.ctx.fig,now):0;
+  var p=s.dur?1-(RUN.end-Date.now())/s.dur:1;
+  if(RUN.paused)p=RUN.pp===undefined?p:RUN.pp;
+  var inv=window.POSES&&POSES[RUN.ctx.fig]&&POSES[RUN.ctx.fig].inv;
+  if(s.k==="up")return inv?1-e(p):e(p);
+  if(s.k==="down")return inv?e(p):1-e(p);
+  if(s.k==="hold")return 1;
+  return 0;
+}
+function figLoop(now){
+  if(!RUN||rEl.hidden){figOn=false;return;}
+  requestAnimationFrame(figLoop);
+  if(now-figLast<33||RUN.paused)return;figLast=now;
+  var id=RUN.ctx.fig;if(!id)return;
+  var t=figPos(now);
+  if(REALPIC[id]){var f=document.getElementById("rFig2");if(f)f.style.opacity=t.toFixed(2);}
+  else if(window.POSES&&POSES[id]){var sv=document.querySelector("#rFig svg");if(sv)sv.innerHTML=figBody(id,t);}
 }
 function runNext(){
   if(!RUN)return;
@@ -1441,13 +1487,13 @@ function startEx(id){
   var idx=D.ex.indexOf(id),nextId=null;
   for(var j=idx+1;j<D.ex.length;j++){var b=setsOf(week,dayK,D.ex[j]),all=true;for(var q=0;q<P.sets;q++)if(!b[q])all=false;if(!all){nextId=D.ex[j];break;}}
   var E=EX[id];
-  runOpen({id:id,name:gymNo(id)?altName(id):exName(id),sets:P.sets,reps:repsOf(id),next:nextId,nextName:nextId?(gymNo(nextId)?altName(nextId):exName(nextId)):""},buildSteps(id,P.sets,from));
+  runOpen({id:id,fig:gymNo(id)?null:id,cue:!gymNo(id)&&EX[id].ng?EX[id].ng[0]:"",name:gymNo(id)?altName(id):exName(id),sets:P.sets,reps:repsOf(id),next:nextId,nextName:nextId?(gymNo(nextId)?altName(nextId):exName(nextId)):""},buildSteps(id,P.sets,from));
 }
 function startCardio(){
   var it=plan(week)[dayK],P=phase(week),kind,min,name;
   if(it.t==="s"){var D=sesOf(week,dayK,it);kind=D.c;min=cminOf(D,P);name=gymNo(kind)?altName(kind):CARDIO[kind].name;}
   else{kind=PRG&&PRG.canRun?"run":"treadmill";min=PRG?PRG.cB[0]:30;name=kind==="run"?"러닝 또는 빠르게 걷기":"경사 걷기";}
-  runOpen({cardio:true,name:name,min:min},cardioSteps(kind,min));
+  runOpen({cardio:true,name:name,min:min,fig:gymNo(kind)?null:kind,cue:!gymNo(kind)&&CARDIO[kind]&&CARDIO[kind].ng?CARDIO[kind].ng[0]:""},cardioSteps(kind,min));
 }
 document.getElementById("rPause").onclick=function(){if(!RUN||RUN.done)return;if(RUN.paused){RUN.end=Date.now()+RUN.rem;RUN.paused=false;}else{RUN.rem=RUN.end-Date.now();RUN.paused=true;try{speechSynthesis.cancel();}catch(e){}}runDraw(RUN.paused?RUN.rem:undefined);};
 document.getElementById("rSetEnd").onclick=function(){if(!RUN||RUN.done)return;RUN.paused=false;for(var j=RUN.i;j<RUN.steps.length;j++){if(RUN.steps[j].k==="setdone"){RUN.i=j-1;runNext();return;}}};
