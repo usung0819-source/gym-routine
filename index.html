@@ -396,7 +396,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.21.1"></script>
+<script src="fig.js?v=1.22.0"></script>
 <script>
 (function(){
 "use strict";
@@ -561,9 +561,9 @@ var PIC={
 PIC.run=PIC.treadmill;
 var REALPIC={},EKPIC={legpress:1,legcurl:1,legext:1,abduct:1,adduct:1,hacksquat:1,calfmachine:1,bridge:1,backext:1,chestpress:1,lateral:1,curl:1,pushdown:1};
 /* 실제 사람 시범 영상: Google Flow(Veo)로 생성, 사용자 계정에서 만든 영상. loop=방법 화면 반복 영상, sync=진행 화면용(시작 자세→끝 자세 한 번, 숫자 박자에 맞춰 재생 위치를 맞춤) */
-var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{},legpress:{},wallpush:{},hamstring:{side:"L",part:"왼쪽 다리"},hipflexor:{side:"R",part:"오른쪽 다리(바닥에 댄 뒤쪽 무릎)"},calfstretch:{side:"R",part:"오른쪽 다리(뒤쪽 다리)"},catcow:{note:"준비운동을 시작하면 그림과 같은 박자로 등을 둥글게 올렸다가 평평한 자세로 돌아옵니다. 허리를 아래로 꺾는 동작은 하지 않습니다."},shoulderroll:{loop:1,note:"영상은 어깨를 뒤로 작게 돌리는 모습입니다. 앞으로 돌릴 때는 같은 크기로 방향만 바꿔 주세요. 준비운동을 시작하면 이 영상이 계속 반복됩니다."},calfraise:{v:2},lateral:{},shoulderpress:{},pecdeck:{},legext:{},inclinepress:{},calfmachine:{},hacksquat:{v:2},backext:{},reardelt:{},run:{loop:1,walk:"treadmill",note:"영상은 트레드밀에서 가볍게 달리는 모습입니다. 달리기 앞뒤의 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},treadmill:{loop:1,note:"영상은 경사를 올린 트레드밀에서 손잡이를 잡지 않고 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},elliptical:{loop:1,note:"발이 발판에서 떨어지지 않게 계속 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},bike:{loop:1,note:"등받이에 허리를 붙인 채 페달을 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},march:{loop:1,note:"제자리에서 무릎을 적당히 들며 걷습니다. 뛰지 않습니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outwalk:{loop:1,note:"팔을 흔들며 평소보다 빠르게 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outrun:{loop:1,walk:"outwalk",note:"겨울 복장으로 가볍게 달리는 모습입니다. 앞뒤 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},pallof:{side:"R",note:"영상은 케이블이 몸 오른쪽에 있는 모습입니다. 운동을 시작하면 '왼쪽' 차례(케이블이 몸 왼쪽)에는 좌우를 바꾼 영상으로 나옵니다. 몸통이 케이블 쪽으로 돌아가지 않게 버티세요."}};
+var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},deadbug:{flip:false,both:1,v:2},abduct:{v:2},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{},legpress:{},wallpush:{},hamstring:{side:"L",part:"왼쪽 다리"},hipflexor:{side:"R",part:"오른쪽 다리(바닥에 댄 뒤쪽 무릎)"},calfstretch:{side:"R",part:"오른쪽 다리(뒤쪽 다리)"},catcow:{note:"준비운동을 시작하면 그림과 같은 박자로 등을 둥글게 올렸다가 평평한 자세로 돌아옵니다. 허리를 아래로 꺾는 동작은 하지 않습니다."},shoulderroll:{loop:1,note:"영상은 어깨를 뒤로 작게 돌리는 모습입니다. 앞으로 돌릴 때는 같은 크기로 방향만 바꿔 주세요. 준비운동을 시작하면 이 영상이 계속 반복됩니다."},calfraise:{v:2},lateral:{},shoulderpress:{},pecdeck:{},legext:{},inclinepress:{},calfmachine:{},hacksquat:{v:2},backext:{},reardelt:{},run:{loop:1,walk:"treadmill",note:"영상은 트레드밀에서 가볍게 달리는 모습입니다. 달리기 앞뒤의 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},treadmill:{loop:1,note:"영상은 경사를 올린 트레드밀에서 손잡이를 잡지 않고 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},elliptical:{loop:1,note:"발이 발판에서 떨어지지 않게 계속 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},bike:{loop:1,note:"등받이에 허리를 붙인 채 페달을 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},march:{loop:1,note:"제자리에서 무릎을 적당히 들며 걷습니다. 뛰지 않습니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outwalk:{loop:1,note:"팔을 흔들며 평소보다 빠르게 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outrun:{loop:1,walk:"outwalk",note:"겨울 복장으로 가볍게 달리는 모습입니다. 앞뒤 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},pallof:{side:"R",note:"영상은 케이블이 몸 오른쪽에 있는 모습입니다. 운동을 시작하면 '왼쪽' 차례(케이블이 몸 왼쪽)에는 좌우를 바꾼 영상으로 나옵니다. 몸통이 케이블 쪽으로 돌아가지 않게 버티세요."}};
 /* flip: 영상은 오른팔·왼다리 쪽만 찍었으므로, 진행 화면에서 반대쪽(st.alt===flip)일 때 좌우 반전해 보여줌. 좌우 반전 = 반대쪽 팔·다리를 반대편에서 본 모습 */
-var AIVT={adduct:{v:2,test:"기구 패드가 무릎 바깥쪽에 붙어 있습니다(실제 기구는 무릎 안쪽을 밀어 모읍니다)."},curlup:{test:"손을 허리 밑이 아니라 몸 옆에 두고 있습니다."},sideplank:{test:"무릎을 대지 않고 발로 버티며, 팔꿈치 대신 손바닥 쪽으로 짚습니다.",side:"R"},deadbug:{test:"한쪽 발이 바닥에 닿고, 팔과 다리가 동시에 움직이지 않습니다."},abduct:{test:"기구 패드가 무릎을 따라 움직이지 않고, 다리를 쭉 펴서 벌립니다."},cheststretch:{test:"몸통을 돌리지 않고, 팔을 어깨 높이로 펴고 발을 옮깁니다.",side:"L",part:"왼팔"},hipcircle:{loop:1,test:"엉덩이를 돌리지 않고 몸 전체가 돌아섭니다."}};
+var AIVT={adduct:{v:2,test:"기구 패드가 무릎 바깥쪽에 붙어 있습니다(실제 기구는 무릎 안쪽을 밀어 모읍니다)."},curlup:{v:2,test:"새 모델로 다시 만들었지만 손을 허리 밑이 아니라 몸 옆 바닥에 두고, 턱이 앞으로 나옵니다."},sideplank:{test:"무릎을 대지 않고 발로 버티며, 팔꿈치 대신 손바닥 쪽으로 짚습니다.",side:"R"},cheststretch:{v:2,test:"새 모델로 다시 만들어 몸통은 제대로 돌리지만, 팔이 어깨보다 낮지 않고 어깨 높이입니다.",side:"R",part:"오른팔"},hipcircle:{loop:1,v:2,test:"새 모델로 다시 만들었습니다. 엉덩이가 좌우로 움직이지만, 정면 영상이라 앞뒤로 원을 그리는지 확인되지 않습니다."}};
 function aivTest(on){for(var k in AIVT){if(on)AIV[k]=AIVT[k];else if(AIV[k]===AIVT[k])delete AIV[k];}}
 /* 다른 방향에서 본 시작·끝 자세 사진(AI 생성). 파일: vid/v/<운동>-<방향>-1.jpg(시작), -2.jpg(끝) */
 var PH3={chairsquat:{v:[["front","앞에서"]],note:{front:"앞에서 본 모습: 무릎이 발끝 방향을 따라가게, 안쪽으로 모이지 않게"}},pulldown:{v:[["side","옆에서"]],note:{side:"옆에서 본 모습: 바를 얼굴 앞쪽으로 쇄골 높이까지 당깁니다. 머리 뒤로 당기지 않습니다"}}};
@@ -610,7 +610,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.21.1",newVer=null;
+var APP_VER="v1.22.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -1510,7 +1510,7 @@ function figLoop(now){
   var cs=RUN.steps[RUN.i],id=(cs&&cs.fig)||RUN.ctx.fig;if(!id)return;
   var t=figPos(now);
   if(AIV[id]&&AIV[id].loop){var lv=document.getElementById("rVid");if(lv){var on=cs&&(cs.k==="cr"||cs.k==="cw");var wk=(cs&&cs.k==="cw"&&AIV[id].walk&&AIV[AIV[id].walk])?AIV[id].walk:id;if((lv.getAttribute("data-cur")||id)!==wk){lv.setAttribute("data-cur",wk);lv.src=aivSrc(wk,"");lv.load();}if(on&&lv.paused){try{var lp=lv.play();if(lp&&lp.catch)lp.catch(function(){});}catch(e){}}else if(!on&&!lv.paused){lv.pause();lv.currentTime=0;}}}
-  else if(AIV[id]){var v=document.getElementById("rVid");if(v&&v.duration){var tt=Math.max(0,Math.min(v.duration-0.05,t*v.duration));if(Math.abs(v.currentTime-tt)>0.02)v.currentTime=tt;var cst=RUN.steps[RUN.i],fl=AIV[id].flip!==undefined?!!(cst&&!!cst.alt===AIV[id].flip):!!(AIV[id].side&&cst&&((cst.label||"")+"|"+(cst.side||"")).indexOf(AIV[id].side==="L"?"오른쪽":"왼쪽")>=0);v.style.transform=fl?"scaleX(-1)":"";}}
+  else if(AIV[id]){var v=document.getElementById("rVid");if(v&&v.duration){var tt=Math.max(0,Math.min(v.duration-0.05,t*v.duration));if(Math.abs(v.currentTime-tt)>0.02)v.currentTime=tt;var cst=RUN.steps[RUN.i],fl=AIV[id].flip!==undefined?!!(cst&&cst.alt!==undefined&&!!cst.alt===AIV[id].flip):!!(AIV[id].side&&cst&&((cst.label||"")+"|"+(cst.side||"")).indexOf(AIV[id].side==="L"?"오른쪽":"왼쪽")>=0);v.style.transform=fl?"scaleX(-1)":"";}}
   else if(REALPIC[id]){var f=document.getElementById("rFig2");if(f)f.style.opacity=t.toFixed(2);}
   else if(window.POSES&&POSES[id]){var sv=document.querySelector("#rFig svg"),st=RUN.steps[RUN.i];if(sv)sv.innerHTML=figBody(id,t,st&&st.alt);
     var iv=document.querySelector("#rFig .inset svg");if(iv&&window.POSE3&&POSE3[id])iv.innerHTML=fig3Body(id,POSE3[id].views[0],t,st&&st.alt);}

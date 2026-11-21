@@ -19,3 +19,5 @@ v1.20.0 추가(정식): lateral, shoulderpress, pecdeck, legext, inclinepress(�
 
 v1.21.0: 유산소 반복 영상(run, treadmill, elliptical, bike, march, outwalk, outrun — 한 동작 주기를 잘라 반복, 야외는 끝과 처음을 0.5초 겹쳐 이음). hacksquat·backext·reardelt 정식(다시 만든 영상), adduct 테스트 영상 교체.
 `v/<운동>-<방향>-1.jpg`, `-2.jpg`: 확대 화면 "다른 방향에서 보기 (사진)"의 시작·끝 자세 사진(Nano Banana Pro). chairsquat(앞), pulldown(옆).
+
+v1.22.0: Omni 1.2 Flash로 다시 만든 영상. 정식: deadbug(오른팔·왼다리, 반대쪽 차례에 좌우 반전), abduct. 테스트 영상 교체: curlup(손이 몸 옆), cheststretch(오른팔, 팔이 어깨 높이), hipcircle(정면이라 원 확인 불가). sideplank(손바닥으로 짚음)·adduct는 그대로 테스트.
