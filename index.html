@@ -396,7 +396,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.25.0"></script>
+<script src="fig.js?v=1.26.0"></script>
 <script>
 (function(){
 "use strict";
@@ -561,7 +561,7 @@ var PIC={
 PIC.run=PIC.treadmill;
 var REALPIC={},EKPIC={legpress:1,legcurl:1,legext:1,abduct:1,adduct:1,hacksquat:1,calfmachine:1,bridge:1,backext:1,chestpress:1,lateral:1,curl:1,pushdown:1};
 /* 실제 사람 시범 영상: Google Flow(Veo)로 생성, 사용자 계정에서 만든 영상. loop=방법 화면 반복 영상, sync=진행 화면용(시작 자세→끝 자세 한 번, 숫자 박자에 맞춰 재생 위치를 맞춤) */
-var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},deadbug:{flip:false,both:1,v:2},abduct:{v:2},hipcircle:{loop:1,v:3},sideplank:{v:2,side:"R"},adduct:{v:3},cheststretch:{v:3,side:"R",part:"오른팔"},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{},legpress:{},wallpush:{},hamstring:{side:"L",part:"왼쪽 다리"},hipflexor:{side:"R",part:"오른쪽 다리(바닥에 댄 뒤쪽 무릎)"},calfstretch:{side:"R",part:"오른쪽 다리(뒤쪽 다리)"},catcow:{note:"준비운동을 시작하면 그림과 같은 박자로 등을 둥글게 올렸다가 평평한 자세로 돌아옵니다. 허리를 아래로 꺾는 동작은 하지 않습니다."},shoulderroll:{loop:1,note:"영상은 어깨를 뒤로 작게 돌리는 모습입니다. 앞으로 돌릴 때는 같은 크기로 방향만 바꿔 주세요. 준비운동을 시작하면 이 영상이 계속 반복됩니다."},calfraise:{v:2},lateral:{},shoulderpress:{},pecdeck:{},legext:{},inclinepress:{},calfmachine:{},hacksquat:{v:2},backext:{},reardelt:{},run:{loop:1,walk:"treadmill",note:"영상은 트레드밀에서 가볍게 달리는 모습입니다. 달리기 앞뒤의 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},treadmill:{loop:1,note:"영상은 경사를 올린 트레드밀에서 손잡이를 잡지 않고 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},elliptical:{loop:1,note:"발이 발판에서 떨어지지 않게 계속 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},bike:{loop:1,note:"등받이에 허리를 붙인 채 페달을 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},march:{loop:1,note:"제자리에서 무릎을 적당히 들며 걷습니다. 뛰지 않습니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outwalk:{loop:1,note:"팔을 흔들며 평소보다 빠르게 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outrun:{loop:1,walk:"outwalk",note:"겨울 복장으로 가볍게 달리는 모습입니다. 앞뒤 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},pallof:{side:"R",note:"영상은 케이블이 몸 오른쪽에 있는 모습입니다. 운동을 시작하면 '왼쪽' 차례(케이블이 몸 왼쪽)에는 좌우를 바꾼 영상으로 나옵니다. 몸통이 케이블 쪽으로 돌아가지 않게 버티세요."}};
+var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},deadbug:{flip:false,both:1,v:2},abduct:{v:2},hipcircle:{loop:1,v:3},sideplank:{v:2,side:"R"},adduct:{v:3},cheststretch:{v:3,side:"R",part:"오른팔"},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{},legpress:{v:2},wallpush:{},hamstring:{side:"L",part:"왼쪽 다리"},hipflexor:{side:"R",part:"오른쪽 다리(바닥에 댄 뒤쪽 무릎)"},calfstretch:{side:"R",part:"오른쪽 다리(뒤쪽 다리)"},catcow:{note:"준비운동을 시작하면 그림과 같은 박자로 등을 둥글게 올렸다가 평평한 자세로 돌아옵니다. 허리를 아래로 꺾는 동작은 하지 않습니다."},shoulderroll:{loop:1,note:"영상은 어깨를 뒤로 작게 돌리는 모습입니다. 앞으로 돌릴 때는 같은 크기로 방향만 바꿔 주세요. 준비운동을 시작하면 이 영상이 계속 반복됩니다."},calfraise:{v:2},lateral:{},shoulderpress:{},pecdeck:{},legext:{},inclinepress:{},calfmachine:{},hacksquat:{v:2},backext:{},reardelt:{},run:{loop:1,walk:"treadmill",note:"영상은 트레드밀에서 가볍게 달리는 모습입니다. 달리기 앞뒤의 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},treadmill:{loop:1,note:"영상은 경사를 올린 트레드밀에서 손잡이를 잡지 않고 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},elliptical:{loop:1,note:"발이 발판에서 떨어지지 않게 계속 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},bike:{loop:1,note:"등받이에 허리를 붙인 채 페달을 돌립니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},march:{loop:1,note:"제자리에서 무릎을 적당히 들며 걷습니다. 뛰지 않습니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outwalk:{loop:1,note:"팔을 흔들며 평소보다 빠르게 걷는 모습입니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},outrun:{loop:1,walk:"outwalk",note:"겨울 복장으로 가볍게 달리는 모습입니다. 앞뒤 걷기 시간에는 걷는 영상으로 바뀝니다. 유산소를 시작하면 시간 동안 계속 반복됩니다."},pallof:{side:"R",note:"영상은 케이블이 몸 오른쪽에 있는 모습입니다. 운동을 시작하면 '왼쪽' 차례(케이블이 몸 왼쪽)에는 좌우를 바꾼 영상으로 나옵니다. 몸통이 케이블 쪽으로 돌아가지 않게 버티세요."}};
 /* flip: 영상은 오른팔·왼다리 쪽만 찍었으므로, 진행 화면에서 반대쪽(st.alt===flip)일 때 좌우 반전해 보여줌. 좌우 반전 = 반대쪽 팔·다리를 반대편에서 본 모습 */
 var AIVT={curlup:{v:2,test:"새 모델로 다시 만들었지만 손을 허리 밑이 아니라 몸 옆 바닥에 두고, 턱이 앞으로 나옵니다."}};
 function aivTest(on){for(var k in AIVT){if(on)AIV[k]=AIVT[k];else if(AIV[k]===AIVT[k])delete AIV[k];}}
@@ -610,7 +610,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.25.0",newVer=null;
+var APP_VER="v1.26.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
