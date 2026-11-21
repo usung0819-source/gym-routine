@@ -391,7 +391,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.17.0"></script>
+<script src="fig.js?v=1.18.0"></script>
 <script>
 (function(){
 "use strict";
@@ -556,7 +556,7 @@ var PIC={
 PIC.run=PIC.treadmill;
 var REALPIC={},EKPIC={legpress:1,legcurl:1,legext:1,abduct:1,adduct:1,hacksquat:1,calfmachine:1,bridge:1,backext:1,chestpress:1,lateral:1,curl:1,pushdown:1};
 /* 실제 사람 시범 영상: Google Flow(Veo)로 생성, 사용자 계정에서 만든 영상. loop=방법 화면 반복 영상, sync=진행 화면용(시작 자세→끝 자세 한 번, 숫자 박자에 맞춰 재생 위치를 맞춤) */
-var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{},legpress:{},hamstring:{side:"L",part:"왼쪽 다리"},hipflexor:{side:"R",part:"오른쪽 다리(바닥에 댄 뒤쪽 무릎)"},calfstretch:{side:"R",part:"오른쪽 다리(뒤쪽 다리)"},catcow:{note:"준비운동을 시작하면 그림과 같은 박자로 등을 둥글게 올렸다가 평평한 자세로 돌아옵니다. 허리를 아래로 꺾는 동작은 하지 않습니다."},shoulderroll:{loop:1,note:"영상은 어깨를 뒤로 작게 돌리는 모습입니다. 앞으로 돌릴 때는 같은 크기로 방향만 바꿔 주세요. 준비운동을 시작하면 이 영상이 계속 반복됩니다."}};
+var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{},legpress:{},wallpush:{},hamstring:{side:"L",part:"왼쪽 다리"},hipflexor:{side:"R",part:"오른쪽 다리(바닥에 댄 뒤쪽 무릎)"},calfstretch:{side:"R",part:"오른쪽 다리(뒤쪽 다리)"},catcow:{note:"준비운동을 시작하면 그림과 같은 박자로 등을 둥글게 올렸다가 평평한 자세로 돌아옵니다. 허리를 아래로 꺾는 동작은 하지 않습니다."},shoulderroll:{loop:1,note:"영상은 어깨를 뒤로 작게 돌리는 모습입니다. 앞으로 돌릴 때는 같은 크기로 방향만 바꿔 주세요. 준비운동을 시작하면 이 영상이 계속 반복됩니다."}};
 /* flip: 영상은 오른팔·왼다리 쪽만 찍었으므로, 진행 화면에서 반대쪽(st.alt===flip)일 때 좌우 반전해 보여줌. 좌우 반전 = 반대쪽 팔·다리를 반대편에서 본 모습 */
 function aivSrc(id,k){return "vid/"+id+(k==="sync"?"-sync.mp4":k==="poster"?".jpg":".mp4")+"?v=1";}
 function pic(id,sm){
@@ -599,7 +599,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.17.0",newVer=null;
+var APP_VER="v1.18.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
