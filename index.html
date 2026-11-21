@@ -558,8 +558,8 @@ function pic(id,sm){
   var pl=function(a){return a.map(function(s){return '<polyline points="'+s+'"/>';}).join("");};
   return '<div class="pic" aria-hidden="true"><svg viewBox="0 0 160 100"><g class="m">'+pl(d.m)+(d.c||[]).map(function(c){return '<circle cx="'+c[0]+'" cy="'+c[1]+'" r="'+c[2]+'"/>';}).join("")+'</g><g class="p">'+pl(d.p)+'</g><circle class="hd" cx="'+d.h[0]+'" cy="'+d.h[1]+'" r="9"/></svg></div>';
 }
-var VID={legpress:"https://sports.kaist.ac.kr/boards/view/board_info_en/178931",pulldown:"https://sports.kaist.ac.kr/boards/view/board_info_en/178725",row:"https://sports.kaist.ac.kr/boards/view/board_info_en/178626",chestpress:"https://sports.kaist.ac.kr/boards/view/board_info/58625",backext:"https://sports.kaist.ac.kr/boards/view/board_info_en/178630"};
-var YT={legpress:"t3VvD7HJCwQ",pulldown:"oPhPPUYFIgI",row:"XWLUQwv1OH8",chestpress:"ITax67A7_FE",backext:"2Z7MNXC-CxM"};
+var VID={deadbug:"https://sports.kaist.ac.kr/boards/chk_view/board_info_en/177867/sc_category/3",birddog:"https://sports.kaist.ac.kr/boards/chk_view/board_info_en/177987/sc_category/3",calfraise:"https://sports.kaist.ac.kr/boards/chk_view/board_info_en/179111/sc_category/4",legpress:"https://sports.kaist.ac.kr/boards/view/board_info_en/178931",pulldown:"https://sports.kaist.ac.kr/boards/view/board_info_en/178725",row:"https://sports.kaist.ac.kr/boards/view/board_info_en/178626",chestpress:"https://sports.kaist.ac.kr/boards/view/board_info/58625",backext:"https://sports.kaist.ac.kr/boards/view/board_info_en/178630"};
+var YT={legpress:"t3VvD7HJCwQ",pulldown:"oPhPPUYFIgI",row:"XWLUQwv1OH8",chestpress:"ITax67A7_FE",backext:"2Z7MNXC-CxM",deadbug:"nWrIecaKjIg",birddog:"tWcN5oSDhoc",calfraise:"gniZHTkATiA"};
 function vid(id){return YT[id]?'<button type="button" class="vid" style="background:none;border:0;padding:0" data-zoom="'+id+'" data-play="1">▶ 영상 보기</button>':"";}
 function photo(id){Q.shoulderpress=Q0.shoulderpress;Q.lateral=Q0.lateral;return Q[id]?'<a class="photo" href="https://www.google.com/search?tbm=isch&q='+encodeURIComponent(Q[id])+'" target="_blank" rel="noopener">실제 사진 보기 ↗</a>':"";}
 
@@ -590,7 +590,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.9.0",newVer=null;
+var APP_VER="v1.9.1",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
