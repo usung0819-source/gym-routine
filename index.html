@@ -387,7 +387,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.7.1"></script>
+<script src="fig.js?v=1.8.0"></script>
 <script>
 (function(){
 "use strict";
@@ -550,7 +550,7 @@ var PIC={
  elliptical:{m:["20,92 140,92","40,80 108,72","56,16 70,80","88,22 80,76"],c:[[120,72,14]],p:["72,48 70,20","72,48 62,78","72,48 84,74","70,24 58,22","70,24 88,26"],h:[70,9]}
 };
 PIC.run=PIC.treadmill;
-var REALPIC={legpress:1,legcurl:1,legext:1,abduct:1,adduct:1,hacksquat:1,calfmachine:1,bridge:1,backext:1,chestpress:1,lateral:1,curl:1,pushdown:1};
+var REALPIC={},EKPIC={legpress:1,legcurl:1,legext:1,abduct:1,adduct:1,hacksquat:1,calfmachine:1,bridge:1,backext:1,chestpress:1,lateral:1,curl:1,pushdown:1};
 function pic(id,sm){
   if(!REALPIC[id]&&window.POSES&&POSES[id])return '<button type="button" class="pic fig'+(sm?" sm":"")+'" data-zoom="'+id+'" aria-label="그림 크게 보기">'+figSvg(id,0)+'</button>';
   if(REALPIC[id])return '<button type="button" class="pic real'+(sm?" sm":"")+'" data-zoom="'+id+'" aria-label="그림 크게 보기"><img src="img/ex/'+id+'-1.svg" alt="" loading="lazy"><img class="f2" src="img/ex/'+id+'-2.svg" alt="" loading="lazy"></button>';
@@ -589,7 +589,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.7.1",newVer=null;
+var APP_VER="v1.8.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -922,6 +922,7 @@ function zoomPic(id){
   var real=REALPIC[id],body;
   if(real)body='<div class="zf"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:8px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p>';
   else body=(window.POSE3&&POSE3[id]?'<div class="seg" style="grid-template-columns:repeat('+(POSE3[id].views.length+1)+',1fr)">'+["side"].concat(POSE3[id].views).map(function(v,i){return '<button type="button" data-zv="'+v+'" aria-selected="'+(i===0)+'">'+{side:"옆에서",top:"위에서",front:"앞에서"}[v]+'</button>';}).join("")+'</div><p id="zNote" class="meta" style="margin:0 0 6px;font-size:13px;color:#5B6478"></p>':"")+figSvg(id,0,"zbig")+'<div class="zf"><figure>'+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
+  if(!real&&EKPIC[id])body+='<details style="margin-top:10px"><summary style="font-size:13px;font-weight:800;cursor:pointer">근육 그림으로 보기 (참고)</summary><div class="zf" style="margin-top:8px"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세" loading="lazy"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세" loading="lazy"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:6px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p></details>';
   var o=document.createElement("div");o.className="zoomov";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");
   o.innerHTML='<div class="zb"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>'+esc(nm)+'</b><button class="btn ghost" style="height:36px">닫기</button></div>'+body+(ng.length?'<b style="display:block;margin-top:10px;color:#E5383B;font-size:14px">다치지 않으려면</b><ul>'+ng.map(function(x){return"<li>"+esc(x)+"</li>";}).join("")+'</ul>':"")+(VID[id]?'<p style="margin:10px 0 0">'+vid(id)+' <span style="font-size:12px;color:#5B6478">KAIST 스포츠센터 초보자용 영상. 이 앱의 주의사항과 다르면 주의사항을 따르세요.</span></p>':"")+'</div>';
   o.onclick=function(e){
