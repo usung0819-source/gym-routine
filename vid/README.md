@@ -12,4 +12,6 @@
 
 준비운동: catcow는 평평한 등 → 둥근 등 한 구간(진행 화면에서 박자에 맞춰 왕복). shoulderroll은 어깨를 뒤로 돌리는 한 바퀴(약 2.6초)를 그대로 반복 재생합니다(-sync 파일 없음).
 
-테스트용(관리자에게만 보임, "테스트" 표시): calfraise, abduct, cheststretch, hipcircle. 자세가 앱 설명과 맞지 않는 영상이라 일반 사용자에게는 나오지 않습니다.
+테스트용(관리자에게만 보임, "테스트" 표시): abduct, adduct, hacksquat, curlup, sideplank, deadbug, cheststretch, hipcircle. 자세가 앱 설명과 맞지 않는 영상이라 일반 사용자에게는 나오지 않습니다.
+
+v1.20.0 추가(정식): lateral, shoulderpress, pecdeck, legext, inclinepress(좌우 반전해 오른쪽을 보게 함), calfmachine, calfraise(Veo 3.1 Fast로 다시 만든 영상), pallof(케이블이 몸 오른쪽인 모습, '왼쪽' 차례에 좌우 반전). hacksquat 테스트 영상은 일어서는 장면을 거꾸로 돌려 서 있는 자세 → 앉은 자세 순서로 맞췄습니다.

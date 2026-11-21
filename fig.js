@@ -323,7 +323,7 @@ POSES.adduct={front:1,bg:FLOOR,
   m:function(J){return R(82,24,36,68,MD,5)+R(74,96,52,7,MP)+R(97,103,6,25,MP)+R(80,124,40,4,MP);},
   fg:function(J){return pad([J.kL[0]+7,J.kL[1]+2],7,16)+pad([J.kR[0]-7,J.kR[1]+2],7,16);},
   f:[{hip:[100,94],seated:1,spread:16,uaL:100,faL:80,uaR:80,faR:100},{hip:[100,94],seated:1,spread:2,uaL:100,faL:80,uaR:80,faR:100}]};
-POSES.hacksquat={bg:FLOOR,
+POSES.hacksquat={inv:1,bg:FLOOR,
   m:function(J){var n=-106-90,b=FIG.pt(FIG.pt(J.hip,n,10),74,6),e=FIG.pt(FIG.pt(J.hip,n,10),-106,44);return R(70,122,70,5,MP)+'<polygon points="88,124 140,124 132,116 96,116" fill="'+MD+'"/>'+Ln([46,124],[78,14],5,MP)+'<line x1="'+b[0].toFixed(1)+'" y1="'+b[1].toFixed(1)+'" x2="'+e[0].toFixed(1)+'" y2="'+e[1].toFixed(1)+'" stroke="'+MD+'" stroke-width="9" stroke-linecap="round"/>';},
   fg:function(J){return pad([J.sh[0]+3,J.sh[1]-6],14,7);},
   f:[{hip:[86,62],t:-106,ank:[106,116],kd:1,ft:0,hand:[96,34],ed:1,face:1},{hip:[95,86],t:-106,ank:[106,116],kd:1,ft:0,hand:[105,58],ed:1,face:1}]};
