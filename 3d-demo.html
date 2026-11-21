@@ -38,7 +38,7 @@ h1{font-size:20px;margin:0;font-weight:800}
   <p class="meta">시범 화면입니다. 마음에 드시면 다른 운동도 같은 방식으로 만들어 앱에 넣습니다.</p>
 </div>
 <script>window.requestAnimationFrame=window.requestAnimationFrame||function(f){return setTimeout(f,16);};</script>
-<script src="fig.js?v=3d1"></script>
+<script src="fig.js?v=3d2"></script>
 <script type="module">
 import * as THREE from "./vendor/three.module.js";
 const stage=document.getElementById("stage");
@@ -57,53 +57,58 @@ const floor=new THREE.Mesh(new THREE.CircleGeometry(170,64),new THREE.MeshStanda
 floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
 const M=(c,r=0.75)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:0});
 const mat={skin:M("#F1C3A0",0.65),shirt:M("#2F5BFF",0.8),pants:M("#1E2A4A",0.85),shoe:M("#33384A",0.6),hair:M("#2B2321",0.9),eye:M("#2B2321",0.4),metal:M("#6B7489",0.5),seat:M("#3A4256",0.8)};
-const body=new THREE.Group();scene.add(body);
 const Y=new THREE.Vector3(0,1,0),V=a=>new THREE.Vector3(a[0],a[1],a[2]);
-function mk(geo,m){const o=new THREE.Mesh(geo,m);o.castShadow=true;o.receiveShadow=true;body.add(o);return o;}
-const cyl=(rt,rb,m)=>mk(new THREE.CylinderGeometry(rt,rb,1,24,1),m), sph=(r,m)=>mk(new THREE.SphereGeometry(r,28,20),m);
-function place(o,a,b){const A=V(a),B=V(b),d=B.clone().sub(A),l=d.length()||0.001;o.position.copy(A).addScaledVector(d,0.5);o.quaternion.setFromUnitVectors(Y,d.normalize());o.scale.set(1,l,1);}
-const lerp3=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
-// 몸 부품
-const P={};
-["R","L"].forEach(s=>{
-  P["thigh"+s]=cyl(5.7,7.4,mat.skin);P["short"+s]=cyl(7.0,7.9,mat.pants);P["knee"+s]=sph(5.7,mat.skin);
-  P["shin"+s]=cyl(3.9,5.5,mat.skin);P["ank"+s]=sph(3.9,mat.skin);P["foot"+s]=sph(1,mat.shoe);
-  P["uarm"+s]=cyl(4.2,4.9,mat.skin);P["slv"+s]=cyl(5.1,5.6,mat.shirt);P["shd"+s]=sph(5.7,mat.shirt);P["elb"+s]=sph(4.2,mat.skin);
-  P["farm"+s]=cyl(3.2,4.1,mat.skin);P["hand"+s]=sph(1,mat.skin);P["hipj"+s]=sph(7.8,mat.pants);
-});
-P.pelvis=sph(1,mat.pants);P.torso=cyl(1,1,mat.shirt);P.chest=sph(1,mat.shirt);P.belly=sph(1,mat.shirt);
-P.neck=cyl(3.3,3.6,mat.skin);P.head=sph(9,mat.skin);P.hair=mk(new THREE.SphereGeometry(9.6,32,24,0,Math.PI*2,0,Math.PI*0.56),mat.hair);
-P.eyeR=sph(1.05,mat.eye);P.eyeL=sph(1.05,mat.eye);P.nose=sph(1.3,mat.skin);
-function basis(o,R,T,F,pos,sx,sy,sz){const m=new THREE.Matrix4().makeBasis(V(R).multiplyScalar(-sx),V(T).multiplyScalar(sy),V(F).multiplyScalar(sz));m.setPosition(V(pos));o.matrixAutoUpdate=false;o.matrix.copy(m);}
 const add=(a,b,k=1)=>[a[0]+b[0]*k,a[1]+b[1]*k,a[2]+b[2]*k];
+// 사람 모형: MakeHuman 기본 인체(CC0)를 관절별로 움직임
+const BD=await (await fetch("./vendor/body.json")).json();
+const RJ={};for(const k in BD.J)RJ[k]=V(BD.J[k]);
+const legLen=RJ.hipL.distanceTo(RJ.knL)+RJ.knL.distanceTo(RJ.anL),SC=58/legLen;
+// 3D 자세 계산에 쓰는 팔다리 길이를 이 모형에 맞춤
+Object.assign(F3.L,{sh:RJ.Hc.distanceTo(RJ.SC)*SC,shw:RJ.shL.x*SC,hpw:RJ.hipL.x*SC,ua:RJ.shL.distanceTo(RJ.elL)*SC,fa:RJ.elL.distanceTo(RJ.wrL)*SC,th:RJ.hipL.distanceTo(RJ.knL)*SC,sn:RJ.knL.distanceTo(RJ.anL)*SC,ft:RJ.anL.distanceTo(RJ.toeL)*SC});
+const COL=["#E9B896","#2F5BFF","#1E2A4A","#2C3040","#2B2321"].map(c=>new THREE.Color(c));
+const n=BD.pos.length/3,pos=new Float32Array(n*3),colr=new Float32Array(n*3),si=new Uint16Array(n*4),sw=new Float32Array(n*4);
+for(let i=0;i<n*3;i++)pos[i]=BD.pos[i]/1000;
+for(let i=0;i<n;i++){const c=COL[BD.col[i]];colr[i*3]=c.r;colr[i*3+1]=c.g;colr[i*3+2]=c.b;}
+for(let i=0;i<n*4;i++){si[i]=BD.si[i];sw[i]=BD.sw[i]/255;}
+const geo=new THREE.BufferGeometry();
+geo.setAttribute("position",new THREE.BufferAttribute(pos,3));geo.setAttribute("color",new THREE.BufferAttribute(colr,3));
+geo.setAttribute("skinIndex",new THREE.BufferAttribute(si,4));geo.setAttribute("skinWeight",new THREE.BufferAttribute(sw,4));
+geo.setIndex(BD.tri);geo.computeVertexNormals();
+const bones=BD.seg.map(()=>{const b=new THREE.Bone();b.matrixAutoUpdate=false;scene.add(b);return b;});
+const skel=new THREE.Skeleton(bones,bones.map(()=>new THREE.Matrix4()));
+const man=new THREE.SkinnedMesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.72,metalness:0}));
+man.bind(skel,new THREE.Matrix4());man.frustumCulled=false;man.castShadow=true;man.receiveShadow=true;scene.add(man);
+// 눈
+const en=BD.eyepos.length/3,ep=new Float32Array(en*3);for(let i=0;i<en*3;i++)ep[i]=BD.eyepos[i]/1000;
+const eg=new THREE.BufferGeometry();eg.setAttribute("position",new THREE.BufferAttribute(ep,3));eg.setIndex(BD.eyetri);eg.computeVertexNormals();
+const eyes=new THREE.Mesh(eg,new THREE.MeshStandardMaterial({color:"#F4F4F4",roughness:0.3}));eyes.matrixAutoUpdate=false;scene.add(eyes);
+const pupils=[RJ.eyeL,RJ.eyeR].map(p=>{const o=new THREE.Mesh(new THREE.SphereGeometry(0.075,16,12),new THREE.MeshStandardMaterial({color:"#2B2321",roughness:0.3}));o.userData.rest=p.clone().add(new THREE.Vector3(0,0,0.13));o.matrixAutoUpdate=false;scene.add(o);return o;});
+const SI={};BD.seg.forEach((s,i)=>SI[s]=i);
+const restBasis=new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0),RJ.SC.clone().sub(RJ.Hc).normalize(),new THREE.Vector3(0,0,1));
+{const T0=RJ.SC.clone().sub(RJ.Hc).normalize(),F0=new THREE.Vector3(0,0,1).addScaledVector(T0,-T0.z).normalize(),L0=new THREE.Vector3().crossVectors(T0,F0).normalize();restBasis.makeBasis(L0,T0,F0);}
+const restInv=restBasis.clone().invert();
+const YOFF=(RJ.anL.y-(-8.449))*SC-3;
+function segM(q,restA,curA){const c=V(curA);c.y+=YOFF;return new THREE.Matrix4().compose(c,q,new THREE.Vector3(SC,SC,SC)).multiply(new THREE.Matrix4().makeTranslation(-restA.x,-restA.y,-restA.z));}
+function child(qp,restA,restB,curA,curB){const rd=restB.clone().sub(restA).normalize().applyQuaternion(qp),cd=V(curB).sub(V(curA)).normalize();return new THREE.Quaternion().setFromUnitVectors(rd,cd).multiply(qp);}
 function pose(o){
-  const J=F3.joints(o),R=J.R,T=J.T,F=J.F;
-  [["R",J.hR,J.kR,J.aR,J.tR,J.sR,J.eR,J.wR],["L",J.hL,J.kL,J.aL,J.tL,J.sL,J.eL,J.wL]].forEach(q=>{
-    const s=q[0],h=q[1],k=q[2],a=q[3],t=q[4],sh=q[5],e=q[6],w=q[7];
-    place(P["thigh"+s],h,k);place(P["short"+s],h,lerp3(h,k,0.6));P["knee"+s].position.copy(V(k));P["hipj"+s].position.copy(V(h));
-    place(P["shin"+s],k,a);P["ank"+s].position.copy(V(a));
-    const fd=V(t).sub(V(a)),fl=fd.length(),fm=V(a).addScaledVector(fd,0.45);fm.y=Math.max(fm.y-1.2,3.2);
-    const fdir=fd.clone().normalize(),up=new THREE.Vector3(0,1,0),side=new THREE.Vector3().crossVectors(fdir,up).normalize(),up2=new THREE.Vector3().crossVectors(side,fdir).normalize();
-    const fmx=new THREE.Matrix4().makeBasis(fdir.multiplyScalar(fl*0.5+3.6),up2.multiplyScalar(3.4),side.multiplyScalar(4.3));fmx.setPosition(fm);P["foot"+s].matrixAutoUpdate=false;P["foot"+s].matrix.copy(fmx);
-    place(P["uarm"+s],sh,e);place(P["slv"+s],sh,lerp3(sh,e,0.55));P["shd"+s].position.copy(V(sh));P["elb"+s].position.copy(V(e));
-    place(P["farm"+s],e,w);const hd=V(w).sub(V(e)).normalize(),hp=V(w).addScaledVector(hd,2.6);
-    const hs=new THREE.Vector3().crossVectors(hd,new THREE.Vector3(0,1,0.001)).normalize(),hu=new THREE.Vector3().crossVectors(hs,hd).normalize();
-    const hm=new THREE.Matrix4().makeBasis(hd.clone().multiplyScalar(4.6),hu.multiplyScalar(3.4),hs.multiplyScalar(2.4));hm.setPosition(hp);P["hand"+s].matrixAutoUpdate=false;P["hand"+s].matrix.copy(hm);
+  const J=F3.joints(o);
+  // 몸통: (왼쪽, 위, 앞) 축을 현재 자세의 축에 맞춤
+  const Lc=V(J.R).negate(),cur=new THREE.Matrix4().makeBasis(Lc,V(J.T),V(J.F));
+  const qT=new THREE.Quaternion().setFromRotationMatrix(cur.multiply(restInv));
+  const mT=segM(qT,RJ.Hc,J.H);bones[SI.torso].matrix.copy(mT);bones[SI.head].matrix.copy(mT);
+  eyes.matrix.copy(mT);pupils.forEach(p=>{p.matrix.copy(mT).multiply(new THREE.Matrix4().makeTranslation(p.userData.rest.x,p.userData.rest.y,p.userData.rest.z));});
+  [["L",J.sL,J.eL,J.wL,J.hL,J.kL,J.aL,J.tL],["R",J.sR,J.eR,J.wR,J.hR,J.kR,J.aR,J.tR]].forEach(a=>{
+    const s=a[0];
+    const qU=child(qT,RJ["sh"+s],RJ["el"+s],a[1],a[2]);bones[SI["uarm"+s]].matrix.copy(segM(qU,RJ["sh"+s],a[1]));
+    const qF=child(qU,RJ["el"+s],RJ["wr"+s],a[2],a[3]);bones[SI["farm"+s]].matrix.copy(segM(qF,RJ["el"+s],a[2]));
+    bones[SI["hand"+s]].matrix.copy(segM(qF,RJ["wr"+s],a[3]));
+    const qH=child(qT,RJ["hip"+s],RJ["kn"+s],a[4],a[5]);bones[SI["thigh"+s]].matrix.copy(segM(qH,RJ["hip"+s],a[4]));
+    const qS=child(qH,RJ["kn"+s],RJ["an"+s],a[5],a[6]);bones[SI["shin"+s]].matrix.copy(segM(qS,RJ["kn"+s],a[5]));
+    const fd=V(a[7]).sub(V(a[6])),fl=fd.length();let toe=a[7];
+    if(Math.abs(fd.y)/fl<0.5){const dr=(RJ["an"+s].y-RJ["toe"+s].y)*SC;toe=[a[7][0],a[6][1]-dr,a[7][2]];}
+    const qFt=child(qS,RJ["an"+s],RJ["toe"+s],a[6],toe);bones[SI["foot"+s]].matrix.copy(segM(qFt,RJ["an"+s],a[6]));
   });
-  basis(P.pelvis,R,T,F,add(J.H,T,1),12.5,8.5,8.6);
-  // 몸통: 골반~어깨 (가로로 넓고 앞뒤로 얇게)
-  const mid=add(J.H,T,17);basis(P.torso,R,T,F,mid,1,30,1);
-  P.torso.geometry.dispose();P.torso.geometry=TG;
-  basis(P.chest,R,T,F,add(J.H,T,30),14.6,8,8.8);basis(P.belly,R,T,F,add(J.H,T,6),11.8,7,8.2);
-  place(P.neck,add(J.SC,T,1),add(J.N,T,4));
-  P.head.position.copy(V(J.HD));
-  const hq=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(V(R).negate(),V(T),V(F)));
-  P.hair.position.copy(V(add(add(J.HD,F,-0.9),T,0.3)));P.hair.quaternion.copy(hq).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.95));
-  const face=add(add(J.HD,F,8.4),T,0.8);P.eyeR.position.copy(V(add(face,R,3.1)));P.eyeL.position.copy(V(add(face,R,-3.1)));P.nose.position.copy(V(add(add(J.HD,F,8.9),T,-1.6)));
 }
-// 몸통 모양: 아래(허리) 좁고 위(가슴) 넓은 타원 기둥
-const TG=new THREE.CylinderGeometry(1,1,1,32,1);
-{const p=TG.attributes.position;for(let i=0;i<p.count;i++){const top=p.getY(i)>0;p.setX(i,p.getX(i)*(top?14.4:11.6));p.setZ(i,p.getZ(i)*(top?8.6:8.0));}p.needsUpdate=true;TG.computeVertexNormals();}
 // 의자
 const chair=new THREE.Group();scene.add(chair);
 function box(w,h,d,x,y,z,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;chair.add(o);return o;}

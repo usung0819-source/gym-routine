@@ -259,7 +259,7 @@ var F3=(function(){
     });
     return {svg:s,J:J,P:P};
   }
-  return {draw:draw,mix:mix,add:add,mul:mul,VIEW:VIEW,joints:joints};
+  return {draw:draw,mix:mix,add:add,mul:mul,VIEW:VIEW,joints:joints,L:L};
 })();
 
 /* 여러 각도가 필요한 운동: 3D 자세 (시작, 끝, 끝-반대쪽) */
