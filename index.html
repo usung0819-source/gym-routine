@@ -391,7 +391,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.15.0"></script>
+<script src="fig.js?v=1.16.0"></script>
 <script>
 (function(){
 "use strict";
@@ -556,7 +556,7 @@ var PIC={
 PIC.run=PIC.treadmill;
 var REALPIC={},EKPIC={legpress:1,legcurl:1,legext:1,abduct:1,adduct:1,hacksquat:1,calfmachine:1,bridge:1,backext:1,chestpress:1,lateral:1,curl:1,pushdown:1};
 /* 실제 사람 시범 영상: Google Flow(Veo)로 생성, 사용자 계정에서 만든 영상. loop=방법 화면 반복 영상, sync=진행 화면용(시작 자세→끝 자세 한 번, 숫자 박자에 맞춰 재생 위치를 맞춤) */
-var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{}};
+var AIV={chairsquat:{},bridge:{},birddog:{flip:true,both:1},pulldown:{},legcurl:{},pushdown:{},curl:{},chestpress:{},row:{},legpress:{},hamstring:{side:"L",part:"왼쪽 다리"},hipflexor:{side:"R",part:"오른쪽 다리(바닥에 댄 뒤쪽 무릎)"},calfstretch:{side:"R",part:"오른쪽 다리(뒤쪽 다리)"}};
 /* flip: 영상은 오른팔·왼다리 쪽만 찍었으므로, 진행 화면에서 반대쪽(st.alt===flip)일 때 좌우 반전해 보여줌. 좌우 반전 = 반대쪽 팔·다리를 반대편에서 본 모습 */
 function aivSrc(id,k){return "vid/"+id+(k==="sync"?"-sync.mp4":k==="poster"?".jpg":".mp4")+"?v=1";}
 function pic(id,sm){
@@ -599,7 +599,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.15.0",newVer=null;
+var APP_VER="v1.16.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -970,7 +970,7 @@ function zoomPic(id,play){
   var real=REALPIC[id],body;
   if(real)body='<div class="zf"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:8px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p>';
   else body=(window.POSE3&&POSE3[id]?'<div class="seg" style="grid-template-columns:repeat('+(POSE3[id].views.length+1)+',1fr)">'+["side"].concat(POSE3[id].views).map(function(v,i){return '<button type="button" data-zv="'+v+'" aria-selected="'+(i===0)+'">'+{side:"옆에서",top:"위에서",front:"앞에서"}[v]+'</button>';}).join("")+'</div><p id="zNote" class="meta" style="margin:0 0 6px;font-size:13px;color:#5B6478"></p>':"")+figSvg(id,0,"zbig")+'<div class="zf"><figure>'+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
-  if(AIV[id])body='<video class="aivbig" src="'+aivSrc(id)+'" poster="'+aivSrc(id,"poster")+'" muted autoplay loop playsinline controls></video><p style="font-size:12px;color:#5B6478;margin:6px 0 0">AI로 만든 시범 영상입니다 (Google Flow · Veo). 실제 인물이 아닙니다. 운동을 시작하면 숫자 박자에 맞춰 같은 영상이 움직입니다.'+(AIV[id].both?' 영상은 오른팔·왼다리 쪽입니다. 반대쪽은 진행 화면에서 좌우가 바뀐 영상으로 나옵니다.':'')+'</p>'+(window.POSE3&&POSE3[id]?'<details style="margin-top:10px"><summary style="font-size:13px;font-weight:800;cursor:pointer">다른 방향에서 보기 (그림)</summary><div style="margin-top:8px">'+body+'</div></details>':'');
+  if(AIV[id])body='<video class="aivbig" src="'+aivSrc(id)+'" poster="'+aivSrc(id,"poster")+'" muted autoplay loop playsinline controls></video><p style="font-size:12px;color:#5B6478;margin:6px 0 0">AI로 만든 시범 영상입니다 (Google Flow · Veo). 실제 인물이 아닙니다. '+(AIV[id].side?'스트레칭을 시작하면 처음 몇 초 동안 이 동작을 천천히 보여주고 끝 자세에서 멈춥니다. 영상은 '+AIV[id].part+' 쪽입니다. 반대쪽은 좌우가 바뀐 영상으로 나옵니다.':'운동을 시작하면 숫자 박자에 맞춰 같은 영상이 움직입니다.')+(AIV[id].both?' 영상은 오른팔·왼다리 쪽입니다. 반대쪽은 진행 화면에서 좌우가 바뀐 영상으로 나옵니다.':'')+'</p>'+(window.POSE3&&POSE3[id]?'<details style="margin-top:10px"><summary style="font-size:13px;font-weight:800;cursor:pointer">다른 방향에서 보기 (그림)</summary><div style="margin-top:8px">'+body+'</div></details>':'');
   if(!real&&EKPIC[id])body+='<details style="margin-top:10px"><summary style="font-size:13px;font-weight:800;cursor:pointer">근육 그림으로 보기 (참고)</summary><div class="zf" style="margin-top:8px"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세" loading="lazy"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세" loading="lazy"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:6px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p></details>';
   var o=document.createElement("div");o.className="zoomov";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");
   o.innerHTML='<div class="zb"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>'+esc(nm)+'</b><button class="btn ghost" style="height:36px">닫기</button></div>'+body+(ng.length?'<b style="display:block;margin-top:10px;color:#E5383B;font-size:14px">다치지 않으려면</b><ul>'+ng.map(function(x){return"<li>"+esc(x)+"</li>";}).join("")+'</ul>':"")+(YT[id]?'<div id="zVid" style="margin-top:10px"><button type="button" class="btn" data-ytplay="1" style="width:100%">▶ 실제 영상 재생 (유튜브 · KAIST 스포츠센터)</button></div><p style="font-size:12px;color:#5B6478;margin:6px 0 0">유튜브 영상을 앱 안에서 재생합니다(데이터 사용). 이 앱의 주의사항과 다르면 주의사항을 따르세요. <a href="'+VID[id]+'" target="_blank" rel="noopener">원문 보기</a></p>':"")+'</div>';
@@ -1413,7 +1413,7 @@ var rEl=document.getElementById("run");
 function say(t){if(!S.voice||!t)return;try{var u=new SpeechSynthesisUtterance(t);u.lang="ko-KR";u.rate=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 function beep(f,len){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f||880;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.2,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+(len||.25));o.start();o.stop(ac.currentTime+(len||.25));}catch(e){}}
 /* 운동별 동작 이름 (올리기/내리기가 실제 움직임과 다른 운동) */
-var LBL0={u:"올리기",d:"천천히 내리기"},LBL={pulldown:{u:"바 당겨 내리기",d:"천천히 올려 보내기"},pushdown:{u:"밀어 내리기",d:"천천히 올리기"},legcurl:{u:"무릎 굽혀 당기기",d:"천천히 펴기"},chestpress:{u:"앞으로 밀기",d:"천천히 돌아오기"},row:{u:"당기기",d:"천천히 앞으로 보내기"}};
+var LBL0={u:"올리기",d:"천천히 내리기"},LBL={pulldown:{u:"바 당겨 내리기",d:"천천히 올려 보내기"},pushdown:{u:"밀어 내리기",d:"천천히 올리기"},legcurl:{u:"무릎 굽혀 당기기",d:"천천히 펴기"},chestpress:{u:"앞으로 밀기",d:"천천히 돌아오기"},row:{u:"당기기",d:"천천히 앞으로 보내기"},legpress:{u:"발판 밀기",d:"천천히 무릎 굽히기"}};
 function buildSteps(id,sets,from){
   var A=(AUTO[id]&&(AUTO[id].h||AUTO[id].s||AUTO[id].alt))?AUTO[id]:{r:repMax(repsOf(id))},st=[],up=S.tempo==="fast"?1000:1500,dn=S.tempo==="fast"?2000:2500,sides=A.s||1;
   var inv={chairsquat:{d:"천천히 앉기",u:"일어나기"},wallpush:{d:"천천히 다가가기",u:"밀어내기"}}[id];
@@ -1495,7 +1495,7 @@ function figLoop(now){
   if(now-figLast<33||RUN.paused)return;figLast=now;
   var cs=RUN.steps[RUN.i],id=(cs&&cs.fig)||RUN.ctx.fig;if(!id)return;
   var t=figPos(now);
-  if(AIV[id]){var v=document.getElementById("rVid");if(v&&v.duration){var tt=Math.max(0,Math.min(v.duration-0.05,t*v.duration));if(Math.abs(v.currentTime-tt)>0.02)v.currentTime=tt;var cst=RUN.steps[RUN.i],fl=AIV[id].flip!==undefined&&cst&&!!cst.alt===AIV[id].flip;v.style.transform=fl?"scaleX(-1)":"";}}
+  if(AIV[id]){var v=document.getElementById("rVid");if(v&&v.duration){var tt=Math.max(0,Math.min(v.duration-0.05,t*v.duration));if(Math.abs(v.currentTime-tt)>0.02)v.currentTime=tt;var cst=RUN.steps[RUN.i],fl=AIV[id].flip!==undefined?!!(cst&&!!cst.alt===AIV[id].flip):!!(AIV[id].side&&cst&&cst.label&&cst.label.indexOf(AIV[id].side==="L"?"오른쪽":"왼쪽")>=0);v.style.transform=fl?"scaleX(-1)":"";}}
   else if(REALPIC[id]){var f=document.getElementById("rFig2");if(f)f.style.opacity=t.toFixed(2);}
   else if(window.POSES&&POSES[id]){var sv=document.querySelector("#rFig svg"),st=RUN.steps[RUN.i];if(sv)sv.innerHTML=figBody(id,t,st&&st.alt);
     var iv=document.querySelector("#rFig .inset svg");if(iv&&window.POSE3&&POSE3[id])iv.innerHTML=fig3Body(id,POSE3[id].views[0],t,st&&st.alt);}
