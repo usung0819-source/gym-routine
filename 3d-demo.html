@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>3D 운동 가이드 시범</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--bg:#F4F7FF;--ink:#14213D;--muted:#5B6478;--line:#DCE3F1;--sel:#2F5BFF;--accent:#FF5A36;--bad:#E5383B}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:14px 14px 24px;display:flex;flex-direction:column;gap:10px;min-height:100%}
+h1{font-size:20px;margin:0;font-weight:800}
+.meta{color:var(--muted);font-size:13px;margin:0}
+#stage{position:relative;width:100%;aspect-ratio:1/1;max-height:62vh;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#EAF0FB;touch-action:none}
+#stage canvas{width:100%;height:100%;display:block}
+#hint{position:absolute;left:10px;bottom:10px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.8);padding:4px 8px;border-radius:8px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg button{min-height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;font:inherit;font-weight:800;font-size:14px;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--sel);color:#fff;border-color:var(--sel)}
+.count{display:flex;align-items:baseline;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+#lab{font-size:20px;font-weight:800}
+#num{font-size:40px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.cue{margin:0;font-size:14px;font-weight:700;color:var(--bad)}
+#err{padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>3D 가이드 시범 · 의자 스쿼트</h1>
+  <p class="meta">손가락(마우스)으로 끌면 돌려 볼 수 있습니다. 아래 버튼으로 옆·앞·위에서 볼 수 있습니다.</p>
+  <div id="stage"><div id="hint">끌어서 회전</div></div>
+  <div class="seg" role="group" aria-label="보는 방향">
+    <button data-v="free" aria-pressed="true">비스듬히</button><button data-v="side" aria-pressed="false">옆에서</button><button data-v="front" aria-pressed="false">앞에서</button><button data-v="top" aria-pressed="false">위에서</button>
+  </div>
+  <div class="count"><span id="lab">준비</span><span id="num">1</span></div>
+  <p class="cue">⚠ 의자에 털썩 앉지 않습니다. 무릎은 발끝 방향으로, 안쪽으로 모이지 않게.</p>
+  <p class="meta">시범 화면입니다. 마음에 드시면 다른 운동도 같은 방식으로 만들어 앱에 넣습니다.</p>
+</div>
+<script>window.requestAnimationFrame=window.requestAnimationFrame||function(f){return setTimeout(f,16);};</script>
+<script src="fig.js?v=3d1"></script>
+<script type="module">
+import * as THREE from "./vendor/three.module.js";
+const stage=document.getElementById("stage");
+let renderer;
+try{renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});}catch(e){stage.innerHTML='<p id="err">이 기기에서는 3D 화면을 열 수 없습니다.</p>';throw e;}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+stage.insertBefore(renderer.domElement,stage.firstChild);
+const scene=new THREE.Scene();scene.background=new THREE.Color("#EAF0FB");
+const cam=new THREE.PerspectiveCamera(32,1,10,2000);
+scene.add(new THREE.HemisphereLight(0xffffff,0xb8c4dc,1.15));
+const sun=new THREE.DirectionalLight(0xffffff,1.9);sun.position.set(90,220,140);sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);const sc=sun.shadow.camera;sc.left=-140;sc.right=140;sc.top=160;sc.bottom=-60;sc.near=10;sc.far=600;sun.shadow.radius=4;sun.shadow.bias=-0.0005;
+scene.add(sun);scene.add(sun.target);sun.target.position.set(-10,40,0);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(170,64),new THREE.MeshStandardMaterial({color:"#DDE5F3",roughness:1}));
+floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+const M=(c,r=0.75)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:0});
+const mat={skin:M("#F1C3A0",0.65),shirt:M("#2F5BFF",0.8),pants:M("#1E2A4A",0.85),shoe:M("#33384A",0.6),hair:M("#2B2321",0.9),eye:M("#2B2321",0.4),metal:M("#6B7489",0.5),seat:M("#3A4256",0.8)};
+const body=new THREE.Group();scene.add(body);
+const Y=new THREE.Vector3(0,1,0),V=a=>new THREE.Vector3(a[0],a[1],a[2]);
+function mk(geo,m){const o=new THREE.Mesh(geo,m);o.castShadow=true;o.receiveShadow=true;body.add(o);return o;}
+const cyl=(rt,rb,m)=>mk(new THREE.CylinderGeometry(rt,rb,1,24,1),m), sph=(r,m)=>mk(new THREE.SphereGeometry(r,28,20),m);
+function place(o,a,b){const A=V(a),B=V(b),d=B.clone().sub(A),l=d.length()||0.001;o.position.copy(A).addScaledVector(d,0.5);o.quaternion.setFromUnitVectors(Y,d.normalize());o.scale.set(1,l,1);}
+const lerp3=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
+// 몸 부품
+const P={};
+["R","L"].forEach(s=>{
+  P["thigh"+s]=cyl(5.7,7.4,mat.skin);P["short"+s]=cyl(7.0,7.9,mat.pants);P["knee"+s]=sph(5.7,mat.skin);
+  P["shin"+s]=cyl(3.9,5.5,mat.skin);P["ank"+s]=sph(3.9,mat.skin);P["foot"+s]=sph(1,mat.shoe);
+  P["uarm"+s]=cyl(4.2,4.9,mat.skin);P["slv"+s]=cyl(5.1,5.6,mat.shirt);P["shd"+s]=sph(5.7,mat.shirt);P["elb"+s]=sph(4.2,mat.skin);
+  P["farm"+s]=cyl(3.2,4.1,mat.skin);P["hand"+s]=sph(1,mat.skin);P["hipj"+s]=sph(7.8,mat.pants);
+});
+P.pelvis=sph(1,mat.pants);P.torso=cyl(1,1,mat.shirt);P.chest=sph(1,mat.shirt);P.belly=sph(1,mat.shirt);
+P.neck=cyl(3.3,3.6,mat.skin);P.head=sph(9,mat.skin);P.hair=mk(new THREE.SphereGeometry(9.6,32,24,0,Math.PI*2,0,Math.PI*0.56),mat.hair);
+P.eyeR=sph(1.05,mat.eye);P.eyeL=sph(1.05,mat.eye);P.nose=sph(1.3,mat.skin);
+function basis(o,R,T,F,pos,sx,sy,sz){const m=new THREE.Matrix4().makeBasis(V(R).multiplyScalar(-sx),V(T).multiplyScalar(sy),V(F).multiplyScalar(sz));m.setPosition(V(pos));o.matrixAutoUpdate=false;o.matrix.copy(m);}
+const add=(a,b,k=1)=>[a[0]+b[0]*k,a[1]+b[1]*k,a[2]+b[2]*k];
+function pose(o){
+  const J=F3.joints(o),R=J.R,T=J.T,F=J.F;
+  [["R",J.hR,J.kR,J.aR,J.tR,J.sR,J.eR,J.wR],["L",J.hL,J.kL,J.aL,J.tL,J.sL,J.eL,J.wL]].forEach(q=>{
+    const s=q[0],h=q[1],k=q[2],a=q[3],t=q[4],sh=q[5],e=q[6],w=q[7];
+    place(P["thigh"+s],h,k);place(P["short"+s],h,lerp3(h,k,0.6));P["knee"+s].position.copy(V(k));P["hipj"+s].position.copy(V(h));
+    place(P["shin"+s],k,a);P["ank"+s].position.copy(V(a));
+    const fd=V(t).sub(V(a)),fl=fd.length(),fm=V(a).addScaledVector(fd,0.45);fm.y=Math.max(fm.y-1.2,3.2);
+    const fdir=fd.clone().normalize(),up=new THREE.Vector3(0,1,0),side=new THREE.Vector3().crossVectors(fdir,up).normalize(),up2=new THREE.Vector3().crossVectors(side,fdir).normalize();
+    const fmx=new THREE.Matrix4().makeBasis(fdir.multiplyScalar(fl*0.5+3.6),up2.multiplyScalar(3.4),side.multiplyScalar(4.3));fmx.setPosition(fm);P["foot"+s].matrixAutoUpdate=false;P["foot"+s].matrix.copy(fmx);
+    place(P["uarm"+s],sh,e);place(P["slv"+s],sh,lerp3(sh,e,0.55));P["shd"+s].position.copy(V(sh));P["elb"+s].position.copy(V(e));
+    place(P["farm"+s],e,w);const hd=V(w).sub(V(e)).normalize(),hp=V(w).addScaledVector(hd,2.6);
+    const hs=new THREE.Vector3().crossVectors(hd,new THREE.Vector3(0,1,0.001)).normalize(),hu=new THREE.Vector3().crossVectors(hs,hd).normalize();
+    const hm=new THREE.Matrix4().makeBasis(hd.clone().multiplyScalar(4.6),hu.multiplyScalar(3.4),hs.multiplyScalar(2.4));hm.setPosition(hp);P["hand"+s].matrixAutoUpdate=false;P["hand"+s].matrix.copy(hm);
+  });
+  basis(P.pelvis,R,T,F,add(J.H,T,1),12.5,8.5,8.6);
+  // 몸통: 골반~어깨 (가로로 넓고 앞뒤로 얇게)
+  const mid=add(J.H,T,17);basis(P.torso,R,T,F,mid,1,30,1);
+  P.torso.geometry.dispose();P.torso.geometry=TG;
+  basis(P.chest,R,T,F,add(J.H,T,30),14.6,8,8.8);basis(P.belly,R,T,F,add(J.H,T,6),11.8,7,8.2);
+  place(P.neck,add(J.SC,T,1),add(J.N,T,4));
+  P.head.position.copy(V(J.HD));
+  const hq=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(V(R).negate(),V(T),V(F)));
+  P.hair.position.copy(V(add(add(J.HD,F,-0.9),T,0.3)));P.hair.quaternion.copy(hq).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.95));
+  const face=add(add(J.HD,F,8.4),T,0.8);P.eyeR.position.copy(V(add(face,R,3.1)));P.eyeL.position.copy(V(add(face,R,-3.1)));P.nose.position.copy(V(add(add(J.HD,F,8.9),T,-1.6)));
+}
+// 몸통 모양: 아래(허리) 좁고 위(가슴) 넓은 타원 기둥
+const TG=new THREE.CylinderGeometry(1,1,1,32,1);
+{const p=TG.attributes.position;for(let i=0;i<p.count;i++){const top=p.getY(i)>0;p.setX(i,p.getX(i)*(top?14.4:11.6));p.setZ(i,p.getZ(i)*(top?8.6:8.0));}p.needsUpdate=true;TG.computeVertexNormals();}
+// 의자
+const chair=new THREE.Group();scene.add(chair);
+function box(w,h,d,x,y,z,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;chair.add(o);return o;}
+box(32,3.5,36,-37,26.5,0,mat.seat);box(3.5,46,36,-52.5,50,0,mat.seat);
+[[-23,-15],[-23,15],[-51,-15],[-51,15]].forEach(p=>box(3,25,3,p[0],12.5,p[1],mat.metal));
+// 자세 (fig.js의 3D 자세 데이터 사용)
+const X=POSE3.chairsquat,A=X.s,B=F3.mix(X.s,X.e,1);
+const ease=u=>{u=Math.max(0,Math.min(1,u));return u*u*(3-2*u);};
+const lab=document.getElementById("lab"),num=document.getElementById("num");
+const SEQ=[["준비",900,0,0],["천천히 앉기",2500,0,1],["잠깐 멈춤",350,1,1],["일어나기",1500,1,0],["",500,0,0]],CYC=SEQ.reduce((s,x)=>s+x[1],0);
+let rep=1,lastCyc=0;
+function tAt(ms){let c=Math.floor(ms/CYC),x=ms%CYC;if(c!==lastCyc){lastCyc=c;rep=rep%15+1;}
+  for(const s of SEQ){if(x<s[1]){if(s[0]&&lab.textContent!==s[0])lab.textContent=s[0];num.textContent=rep;return s[2]+(s[3]-s[2])*ease(x/s[1]);}x-=s[1];}return 0;}
+// 카메라
+let az=0.62,el=0.2,dist=330,tAz=az,tEl=el;const target=new THREE.Vector3(-12,52,0);
+const VIEWS={free:[0.62,0.2],side:[0,0.06],front:[Math.PI/2,0.06],top:[0.0001,1.5]};
+document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const v=VIEWS[b.dataset.v];tAz=v[0];tEl=v[1];document.querySelectorAll("[data-v]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));});
+let drag=null;
+stage.addEventListener("pointerdown",e=>{drag=[e.clientX,e.clientY,tAz,tEl];stage.setPointerCapture(e.pointerId);document.getElementById("hint").hidden=true;});
+stage.addEventListener("pointermove",e=>{if(!drag)return;tAz=drag[2]-(e.clientX-drag[0])*0.01;tEl=Math.max(-0.05,Math.min(1.5,drag[3]+(e.clientY-drag[1])*0.008));document.querySelectorAll("[data-v]").forEach(x=>x.setAttribute("aria-pressed","false"));});
+stage.addEventListener("pointerup",()=>{drag=null;});stage.addEventListener("pointercancel",()=>{drag=null;});
+function size(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+window.addEventListener("resize",size);size();
+const still=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const t0=performance.now();
+function frame(now){
+  requestAnimationFrame(frame);
+  const t=window.__T!==undefined?window.__T:(still?0:tAt(now-t0));
+  pose(F3.mix(A,B,t));
+  az+=(tAz-az)*0.14;el+=(tEl-el)*0.14;
+  cam.position.set(target.x+dist*Math.sin(az)*Math.cos(el),target.y+dist*Math.sin(el),target.z+dist*Math.cos(az)*Math.cos(el));cam.lookAt(target);
+  renderer.render(scene,cam);
+}
+requestAnimationFrame(frame);
+window.__setView=(v)=>{const q=VIEWS[v];tAz=az=q[0];tEl=el=q[1];};
+</script>
+</body>
+</html>
