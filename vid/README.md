@@ -21,3 +21,5 @@ v1.21.0: 유산소 반복 영상(run, treadmill, elliptical, bike, march, outwal
 `v/<운동>-<방향>-1.jpg`, `-2.jpg`: 확대 화면 "다른 방향에서 보기 (사진)"의 시작·끝 자세 사진(Nano Banana Pro). chairsquat(앞), pulldown(옆).
 
 v1.22.0: Omni 1.2 Flash로 다시 만든 영상. 정식: deadbug(오른팔·왼다리, 반대쪽 차례에 좌우 반전), abduct. 테스트 영상 교체: curlup(손이 몸 옆), cheststretch(오른팔, 팔이 어깨 높이), hipcircle(정면이라 원 확인 불가). sideplank(손바닥으로 짚음)·adduct는 그대로 테스트.
+
+v1.23.0: 정식: adduct(패드가 무릎 안쪽, 벌린 자세→모음), cheststretch(오른팔을 어깨보다 낮게 벽에 대고 몸통을 돌림). 시작·끝 사진을 Nano Banana Pro로 새로 만든 뒤 Omni 1.2 Flash로 제작.
