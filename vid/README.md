@@ -15,3 +15,7 @@
 테스트용(관리자에게만 보임, "테스트" 표시): abduct, adduct, hacksquat, curlup, sideplank, deadbug, cheststretch, hipcircle. 자세가 앱 설명과 맞지 않는 영상이라 일반 사용자에게는 나오지 않습니다.
 
 v1.20.0 추가(정식): lateral, shoulderpress, pecdeck, legext, inclinepress(좌우 반전해 오른쪽을 보게 함), calfmachine, calfraise(Veo 3.1 Fast로 다시 만든 영상), pallof(케이블이 몸 오른쪽인 모습, '왼쪽' 차례에 좌우 반전). hacksquat 테스트 영상은 일어서는 장면을 거꾸로 돌려 서 있는 자세 → 앉은 자세 순서로 맞췄습니다.
+
+
+v1.21.0: 유산소 반복 영상(run, treadmill, elliptical, bike, march, outwalk, outrun — 한 동작 주기를 잘라 반복, 야외는 끝과 처음을 0.5초 겹쳐 이음). hacksquat·backext·reardelt 정식(다시 만든 영상), adduct 테스트 영상 교체.
+`v/<운동>-<방향>-1.jpg`, `-2.jpg`: 확대 화면 "다른 방향에서 보기 (사진)"의 시작·끝 자세 사진(Nano Banana Pro). chairsquat(앞), pulldown(옆).
