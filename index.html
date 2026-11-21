@@ -151,7 +151,8 @@ table.gymt td{padding:8px 4px;vertical-align:middle}
 .gb button[data-v="yes"][aria-pressed="true"]{background:var(--good-soft);border-color:var(--good);color:var(--good)}
 .gb button[data-v="no"][aria-pressed="true"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 .detail .ng + ul{color:var(--ink)}
-.simple{display:flex;align-items:center;gap:12px}
+.simple{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.simple .txt{flex:1;min-width:120px}
 .check{flex:none;width:44px;height:44px;border-radius:12px;border:2px dashed var(--line);background:transparent;font-size:20px;font-weight:800;color:var(--good)}
 .check[aria-pressed="true"]{border-style:solid;border-color:var(--good);background:var(--good-soft)}
 .simple .txt{flex:1;min-width:0}
@@ -387,7 +388,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.9.0"></script>
+<script src="fig.js?v=1.10.0"></script>
 <script>
 (function(){
 "use strict";
@@ -590,7 +591,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.9.1",newVer=null;
+var APP_VER="v1.10.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -831,7 +832,44 @@ function detail(id,how,ng,altKey){
 }
 function simpleCard(id,title,sub,how,ng,picId){
   var on=isDone(week,dayK,id);
-  return '<div class="card'+(on?" complete":"")+'">'+(picId?'<div class="exhead">'+pic(picId)+'<div class="ttl"><h4>'+esc(title)+'</h4><p class="meta">'+sub+'</p></div></div>':"")+'<div class="simple"'+(picId?' style="margin-top:12px"':"")+'><button class="check" data-done="'+id+'" aria-pressed="'+on+'" aria-label="'+esc(title)+' 완료">'+(on?"✓":"")+'</button><div class="txt">'+(picId?'<p class="meta">다 했으면 체크</p>':'<h4 style="margin:0;font-size:16px">'+esc(title)+'</h4><p class="meta">'+sub+'</p>')+'</div><div class="acts"><button class="infobtn" data-info="'+id+'" aria-expanded="false">방법</button>'+(picId?photo(picId):"")+'</div></div>'+detail(id,how,ng,picId)+'</div>';
+  return '<div class="card'+(on?" complete":"")+'">'+(picId?'<div class="exhead">'+pic(picId)+'<div class="ttl"><h4>'+esc(title)+'</h4><p class="meta">'+sub+'</p></div></div>':"")+'<div class="simple"'+(picId?' style="margin-top:12px"':"")+'><button class="check" data-done="'+id+'" aria-pressed="'+on+'" aria-label="'+esc(title)+' 완료">'+(on?"✓":"")+'</button><div class="txt">'+(picId?'<p class="meta">다 했으면 체크</p>':'<h4 style="margin:0;font-size:16px">'+esc(title)+'</h4><p class="meta">'+sub+'</p>')+'</div><div class="acts">'+((id==="warm"||id==="stretch")?'<button class="startbtn" data-gstart="'+id+'">▶ 시작</button>':"")+'<button class="infobtn" data-info="'+id+'" aria-expanded="false">방법</button>'+(picId?photo(picId):"")+'</div></div>'+((id==="warm"||id==="stretch")?guideThumbs(id):"")+detail(id,how,ng,picId)+'</div>';
+}
+/* ---------- 준비운동·마무리 가이드 (그림 + 타이머) ---------- */
+var GNAME={shoulderroll:"어깨 작게 돌리기",catcow:"네발 자세 허리 둥글게·평평하게",hipcircle:"엉덩이 돌리기",hamstring:"누워서 허벅지 뒤 늘리기",hipflexor:"무릎 꿇고 허벅지 앞 늘리기",cheststretch:"벽에 팔 대고 가슴 늘리기",calfstretch:"벽 짚고 종아리 늘리기"};
+var GCUE={shoulderroll:"크게 돌리지 않습니다. 아프지 않은 범위에서 작게.",catcow:"허리를 아래로 꺾지 않습니다. 둥글게 올렸다가 평평한 자세까지만.",hipcircle:"허리를 뒤로 젖히지 말고 천천히 작게 돕니다.",hamstring:"무릎을 억지로 펴지 말고, 허리가 바닥에서 뜨지 않게 합니다. 반동 금지.",hipflexor:"허리를 뒤로 꺾지 말고 골반만 앞으로 밉니다.",cheststretch:"팔은 어깨보다 낮게 댑니다. 어깨 앞쪽이 찌릿하면 멈춥니다.",calfstretch:"뒤쪽 다리 무릎을 펴고 뒤꿈치를 바닥에 붙입니다."};
+function guidePlan(kind){
+  var it=plan(week)[dayK],D=it.t==="s"?sesOf(week,dayK,it):{wmin:10},short=D.wmin<10,l=[];
+  function g(fig,label,sec,o){o=o||{};l.push({fig:fig,label:label,sec:sec,sub:o.sub||"",hold:o.hold,cue:GCUE[fig]||(CARDIO[fig]&&CARDIO[fig].ng?CARDIO[fig].ng[0]:"")});}
+  if(kind==="warm"){
+    if(D.out){g("shoulderroll","어깨 작게 돌리기",60,{sub:"앞으로 10회, 뒤로 10회"});g("hipcircle","엉덩이 돌리기",60,{sub:"좌우로 천천히 10회씩"});g("outwalk","밖에서 천천히 걷기",short?120:300,{sub:"몸이 따뜻해질 때까지"});}
+    else{
+      if(D.home)g("march","제자리 걷기",short?120:300,{sub:"가볍게"});else g(gymNo("bike")?"treadmill":"bike",gymNo("bike")?"트레드밀 걷기":"실내자전거",short?120:300,{sub:"아주 가볍게"});
+      g("shoulderroll","어깨 작게 돌리기",short?40:60,{sub:"앞으로 10회, 뒤로 10회"});
+      g("catcow","네발 자세 허리 둥글게·평평하게",short?40:75,{sub:"천천히 5회, 통증 없는 범위만"});
+      g("hipcircle","엉덩이 돌리기",short?40:60,{sub:"좌우로 천천히 10회씩"});
+    }
+  }else{
+    var rounds=short?1:2;
+    for(var r=0;r<rounds;r++){g("hamstring","허벅지 뒤 늘리기 · 왼쪽",30,{hold:1,sub:"수건을 발에 걸고 당기기"+(rounds>1?" ("+(r+1)+"/2)":"")});g("hamstring","허벅지 뒤 늘리기 · 오른쪽",30,{hold:1,sub:"수건을 발에 걸고 당기기"+(rounds>1?" ("+(r+1)+"/2)":"")});}
+    g("hipflexor","허벅지 앞 늘리기 · 왼쪽",30,{hold:1,sub:"골반을 앞으로"});g("hipflexor","허벅지 앞 늘리기 · 오른쪽",30,{hold:1,sub:"골반을 앞으로"});
+    g("cheststretch","가슴 늘리기 · 왼쪽",20,{hold:1,sub:"팔은 어깨보다 낮게"});g("cheststretch","가슴 늘리기 · 오른쪽",20,{hold:1,sub:"팔은 어깨보다 낮게"});
+    g("calfstretch","종아리 늘리기 · 왼쪽",30,{hold:1,sub:"뒤꿈치를 바닥에"});g("calfstretch","종아리 늘리기 · 오른쪽",30,{hold:1,sub:"뒤꿈치를 바닥에"});
+  }
+  return l;
+}
+function guideThumbs(kind){
+  var seen={},h="";guidePlan(kind).forEach(function(x){if(seen[x.fig])return;seen[x.fig]=1;h+='<figure style="margin:0;width:84px;flex:none">'+pic(x.fig,1)+'<figcaption style="font-size:11px;line-height:1.3;margin-top:3px;color:var(--muted)">'+esc(GNAME[x.fig]||(CARDIO[x.fig]?CARDIO[x.fig].name.split(" (")[0]:x.label))+'</figcaption></figure>';});
+  return '<div style="display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px">'+h+'</div>';
+}
+function startGuide(kind){
+  var l=guidePlan(kind),st=[],tot=0;
+  l.forEach(function(x,i){
+    st.push({k:"ready",label:"다음: "+x.label,sub:x.sub,dur:i===0?5000:7000,cd:true,say:x.label,fig:x.fig,cue:x.cue,gi:i});
+    st.push({k:"cr",label:x.label,sub:x.sub,dur:x.sec*1000,cd:true,fig:x.fig,cue:x.cue,hold:x.hold,gi:i,say:"시작"});
+    tot+=x.sec;
+  });
+  st.push({k:"gdone",dur:0,mark:kind,say:kind==="warm"?"준비운동 완료":"스트레칭 완료"});st.push({k:"end",dur:0});
+  runOpen({cardio:true,guide:true,gn:l.length,name:kind==="warm"?"준비운동":"마무리 스트레칭",min:Math.round(tot/60),fig:l[0].fig,cue:l[0].cue},st);
 }
 function listCard(title,items,cls){return '<div class="card '+(cls||"")+'"><h4 style="margin:0 0 6px;font-size:16px">'+esc(title)+'</h4><ul class="tips">'+items.map(function(x){return"<li>"+x+"</li>";}).join("")+"</ul></div>";}
 function drinkBtn(){
@@ -906,6 +944,7 @@ function bindDay(el){
     var k=week+"|"+dayK+"|"+inp.dataset.kg;var v=inp.value.trim();if(v)S.kg[k]=v;else delete S.kg[k];save();
   };});
   el.querySelectorAll("[data-zoom]").forEach(function(b){b.onclick=function(){zoomPic(b.dataset.zoom,b.dataset.play);};});
+  el.querySelectorAll("[data-gstart]").forEach(function(b){b.onclick=function(){startGuide(b.dataset.gstart);};});
   el.querySelectorAll("[data-pain]").forEach(function(b){b.onclick=function(){var k=dateKeyOf(week,dayK),v=+b.dataset.pain;S.pain=S.pain||{};if(S.pain[k]!==undefined&&+S.pain[k]===v)delete S.pain[k];else S.pain[k]=v;save();keepScroll(function(){renderDay();renderTop();});};});
   el.querySelectorAll("[data-sug]").forEach(function(b){b.onclick=function(){var id=b.dataset.sug,inp=document.getElementById("kg-"+id);inp.value=b.dataset.v;S.kg[week+"|"+dayK+"|"+id]=b.dataset.v;save();b.textContent="적용됨";b.disabled=true;};});
   el.querySelectorAll("[data-start]").forEach(function(b){b.onclick=function(){say("시작합니다");startEx(b.dataset.start);};});
@@ -919,7 +958,7 @@ function bindDay(el){
   if(db)db.onclick=function(){S.drink[week]=S.drink[week]||{};S.drink[week][dayK]=!S.drink[week][dayK];save();keepScroll(function(){renderDay();renderTop();});};
 }
 function zoomPic(id,play){
-  var nm=EX[id]?exName(id):CARDIO[id]?CARDIO[id].name:id,ng=(EX[id]&&EX[id].ng)||(CARDIO[id]&&CARDIO[id].ng)||[];
+  var nm=EX[id]?exName(id):CARDIO[id]?CARDIO[id].name:(GNAME[id]||id),ng=(EX[id]&&EX[id].ng)||(CARDIO[id]&&CARDIO[id].ng)||(GCUE[id]?[GCUE[id]]:[]);
   var real=REALPIC[id],body;
   if(real)body='<div class="zf"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:8px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p>';
   else body=(window.POSE3&&POSE3[id]?'<div class="seg" style="grid-template-columns:repeat('+(POSE3[id].views.length+1)+',1fr)">'+["side"].concat(POSE3[id].views).map(function(v,i){return '<button type="button" data-zv="'+v+'" aria-selected="'+(i===0)+'">'+{side:"옆에서",top:"위에서",front:"앞에서"}[v]+'</button>';}).join("")+'</div><p id="zNote" class="meta" style="margin:0 0 6px;font-size:13px;color:#5B6478"></p>':"")+figSvg(id,0,"zbig")+'<div class="zf"><figure>'+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
@@ -1429,7 +1468,7 @@ function figInit(c){
 function figPos(now){
   var s=RUN.steps[RUN.i];if(!s)return 0;
   var e=function(u){u=Math.max(0,Math.min(1,u));return u*u*(3-2*u);};
-  if(RUN.ctx.cardio)return (s.k==="cr"||s.k==="cw")?figT(RUN.ctx.fig,now):0;
+  if(RUN.ctx.cardio){if(s.k!=="cr"&&s.k!=="cw")return 0;if(s.hold)return e((s.dur-(RUN.end-Date.now()))/2500);return figT(s.fig||RUN.ctx.fig,now);}
   var p=s.dur?1-(RUN.end-Date.now())/s.dur:1;
   if(RUN.paused)p=RUN.pp===undefined?p:RUN.pp;
   var inv=window.POSES&&POSES[RUN.ctx.fig]&&POSES[RUN.ctx.fig].inv;
@@ -1442,11 +1481,11 @@ function figLoop(now){
   if(!RUN||rEl.hidden){figOn=false;return;}
   requestAnimationFrame(figLoop);
   if(now-figLast<33||RUN.paused)return;figLast=now;
-  var id=RUN.ctx.fig;if(!id)return;
+  var cs=RUN.steps[RUN.i],id=(cs&&cs.fig)||RUN.ctx.fig;if(!id)return;
   var t=figPos(now);
   if(REALPIC[id]){var f=document.getElementById("rFig2");if(f)f.style.opacity=t.toFixed(2);}
   else if(window.POSES&&POSES[id]){var sv=document.querySelector("#rFig svg"),st=RUN.steps[RUN.i];if(sv)sv.innerHTML=figBody(id,t,st&&st.alt);
-    var iv=document.querySelector("#rFig .inset svg");if(iv)iv.innerHTML=fig3Body(id,POSE3[id].views[0],t,st&&st.alt);}
+    var iv=document.querySelector("#rFig .inset svg");if(iv&&window.POSE3&&POSE3[id])iv.innerHTML=fig3Body(id,POSE3[id].views[0],t,st&&st.alt);}
 }
 function runNext(){
   if(!RUN)return;
@@ -1454,6 +1493,8 @@ function runNext(){
   if(!s||s.k==="end"){runFinish();return;}
   if(s.k==="setdone"){var k=dk(week,dayK);S.sets[k]=S.sets[k]||{};var a=S.sets[k][RUN.ctx.id]||[];a[s.set]=true;S.sets[k][RUN.ctx.id]=a;save();}
   if(s.k==="cardone"){var k2=dk(week,dayK);S.done[k2]=S.done[k2]||{};S.done[k2].cardio=true;save();}
+  if(s.k==="gdone"){var k3=dk(week,dayK);S.done[k3]=S.done[k3]||{};S.done[k3][s.mark]=true;save();}
+  if(RUN.ctx.guide&&s.fig&&s.fig!==RUN.curFig){RUN.curFig=s.fig;figInit({fig:s.fig,cue:s.cue});}
   if(s.say)say(s.say);
   if(s.k==="up"&&!S.voice)beep(880,.12);
   RUN.end=Date.now()+s.dur;RUN.lastSec=-1;
@@ -1473,7 +1514,7 @@ function runDraw(rem){
   if(rem===undefined)rem=RUN.end-Date.now();
   var c=RUN.ctx,tot=c.sets;
   document.getElementById("rName").textContent=c.name;
-  document.getElementById("rSet").textContent=c.cardio?(c.min+"분 유산소"):((s.set+1)+" / "+tot+"세트"+(s.side?" · "+s.side:"")+(c.reps?" · 목표 "+c.reps:""));
+  document.getElementById("rSet").textContent=c.guide?((s.gi+1)+" / "+c.gn+" 동작"):c.cardio?(c.min+"분 유산소"):((s.set+1)+" / "+tot+"세트"+(s.side?" · "+s.side:"")+(c.reps?" · 목표 "+c.reps:""));
   document.getElementById("rLabel").textContent=s.label||"";
   document.getElementById("rSub").textContent=s.sub||(s.k==="rest"?"물 한 모금 마시고 숨 고르기":(s.small?s.small+"회째":""));
   document.getElementById("rBig").textContent=s.cd?fmtT(rem):String(s.big||"");
@@ -1486,7 +1527,7 @@ function runDraw(rem){
 function runFinish(){
   clearInterval(runTimer);
   var c=RUN.ctx;
-  document.getElementById("rLabel").textContent=c.cardio?"유산소 완료":"모든 세트 완료";
+  document.getElementById("rLabel").textContent=c.guide?c.name+" 완료":c.cardio?"유산소 완료":"모든 세트 완료";
   document.getElementById("rSub").textContent="수고하셨습니다";
   document.getElementById("rBig").textContent="✓";document.getElementById("rBig").className="rbig k-done";
   document.getElementById("rBar").style.width="100%";

@@ -48,7 +48,9 @@ var FIG=(function(){
     var J=joints(P),s="";
     s+=leg(J.hip,J.k2,J.a2,J.f2,1)+arm(J.sh,J.e2,J.h2,1);
     s+=tp(J.sh,J.neck,3.4,3.2,C.skin);
-    s+=tp(J.hip,J.sh,8.8,10,C.shirt)+tp(J.hip,pt(J.hip,P.t,7),9,8.9,C.pants);
+    if(P.bend){var md=[(J.hip[0]+J.sh[0])/2,(J.hip[1]+J.sh[1])/2],nn=pt(md,P.t-90,P.bend);s+=tp(J.hip,nn,8.8,9.6,C.shirt)+tp(nn,J.sh,9.6,10,C.shirt);}
+    else s+=tp(J.hip,J.sh,8.8,10,C.shirt);
+    s+=tp(J.hip,pt(J.hip,P.t,7),9,8.9,C.pants);
     s+=leg(J.hip,J.k1,J.a1,J.f1,0);
     var f=P.face||1,ang=((P.hd===undefined?P.t:P.hd)+90)*Math.PI/180,ca=Math.cos(ang),sa=Math.sin(ang);
     function rel(x,y){return [J.head[0]+x*ca-y*sa,J.head[1]+x*sa+y*ca];}
@@ -349,3 +351,24 @@ POSES.pushdown={bg:FLOOR,
   m:function(J){return R(140,4,8,124,MP)+R(118,4,30,6,MD)+Ci([124,10],4,MP)+Ln([124,10],[J.h1[0]+2,J.h1[1]-2],1.5,"#333");},
   fg:function(J){return R(J.h1[0]-6,J.h1[1]-3,14,5,MP,2);},
   f:[{hip:[98,67],t:-84,ua:96,fa:-25,th:90,sh:90,ft:0,face:1},{hip:[98,67],t:-84,ua:96,fa:92,th:90,sh:90,ft:0,face:1}]};
+
+/* ---------- 준비운동·마무리 스트레칭 가이드 ---------- */
+POSES.shoulderroll={bg:FLOOR,f:[{hip:[100,67],t:-90,ua:108,fa:95,ua2:108,fa2:95,th:89,sh:90,th2:92,sh2:90,ft:0,face:1},{hip:[100,67],t:-90,ua:74,fa:88,ua2:74,fa2:88,th:89,sh:90,th2:92,sh2:90,ft:0,face:1}]};
+POSES.catcow={bg:MAT,f:[
+  {hip:[70,95],t:-15,hd:-12,bend:0.01,ua:90,fa:90,th:90,sh:180,ft:170,face:1},
+  {hip:[70,95],t:-15,hd:38,bend:7,ua:90,fa:90,th:90,sh:180,ft:170,face:1}]};
+POSES.hipcircle={bg:FLOOR,f:[
+  {hip:[95,67],t:-83,ank:[100,125],kd:1,ft:0,hand:[99,62],ed:1,face:1},
+  {hip:[105,67],t:-97,ank:[100,125],kd:1,ft:0,hand:[109,62],ed:1,face:1}]};
+POSES.hamstring={bg:MAT,
+  fg:function(J){return '<line x1="'+J.h1[0].toFixed(1)+'" y1="'+J.h1[1].toFixed(1)+'" x2="'+J.f1[0].toFixed(1)+'" y2="'+J.f1[1].toFixed(1)+'" stroke="#E8B04A" stroke-width="3" stroke-linecap="round"/>';},
+  f:[{hip:[78,117],t:0,hd:2,th:-150,sh:-150,ft:-70,th2:180,sh2:180,ft2:-90,ua:-140,fa:-150,face:1,lie:1},
+     {hip:[78,117],t:0,hd:2,th:-105,sh:-105,ft:-20,th2:180,sh2:180,ft2:-90,ua:-110,fa:-125,face:1,lie:1}]};
+POSES.hipflexor={bg:MAT,f:[
+  {hip:[94,93],t:-90,th:109.5,sh:180,ft:180,th2:8,sh2:85,ft2:0,ua:70,fa:30,face:1},
+  {hip:[102,95],t:-92,th:124,sh:180,ft:180,th2:0,sh2:101,ft2:0,ua:70,fa:30,face:1}]};
+POSES.calfstretch={bg:FLOOR,m:function(){return R(168,0,32,128,"#C9D1E0",0)+R(168,0,3,128,MC,0);},f:[
+  {hip:[118,70],t:-76,ank:[92,125],kd:1,ft:0,th2:75,sh2:100,ft2:0,hand:[164,54],ed:1,face:1},
+  {hip:[126,72],t:-72,ank:[92,125],kd:1,ft:0,th2:58,sh2:106,ft2:0,hand:[164,54],ed:1,face:1}]};
+POSES.cheststretch={front:1,bg:FLOOR,m:function(){return R(152,0,48,128,"#C9D1E0",0)+R(152,0,3,128,MC,0);},
+  f:[{hip:[116,68],uaL:98,faL:94,uaR:14,faR:-35},{hip:[108,68],uaL:98,faL:94,uaR:12,faR:8}]};
