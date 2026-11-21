@@ -387,7 +387,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.8.0"></script>
+<script src="fig.js?v=1.9.0"></script>
 <script>
 (function(){
 "use strict";
@@ -559,7 +559,8 @@ function pic(id,sm){
   return '<div class="pic" aria-hidden="true"><svg viewBox="0 0 160 100"><g class="m">'+pl(d.m)+(d.c||[]).map(function(c){return '<circle cx="'+c[0]+'" cy="'+c[1]+'" r="'+c[2]+'"/>';}).join("")+'</g><g class="p">'+pl(d.p)+'</g><circle class="hd" cx="'+d.h[0]+'" cy="'+d.h[1]+'" r="9"/></svg></div>';
 }
 var VID={legpress:"https://sports.kaist.ac.kr/boards/view/board_info_en/178931",pulldown:"https://sports.kaist.ac.kr/boards/view/board_info_en/178725",row:"https://sports.kaist.ac.kr/boards/view/board_info_en/178626",chestpress:"https://sports.kaist.ac.kr/boards/view/board_info/58625",backext:"https://sports.kaist.ac.kr/boards/view/board_info_en/178630"};
-function vid(id){return VID[id]?'<a class="vid" href="'+VID[id]+'" target="_blank" rel="noopener">▶ 영상 (KAIST)</a>':"";}
+var YT={legpress:"t3VvD7HJCwQ",pulldown:"oPhPPUYFIgI",row:"XWLUQwv1OH8",chestpress:"ITax67A7_FE",backext:"2Z7MNXC-CxM"};
+function vid(id){return YT[id]?'<button type="button" class="vid" style="background:none;border:0;padding:0" data-zoom="'+id+'" data-play="1">▶ 영상 보기</button>':"";}
 function photo(id){Q.shoulderpress=Q0.shoulderpress;Q.lateral=Q0.lateral;return Q[id]?'<a class="photo" href="https://www.google.com/search?tbm=isch&q='+encodeURIComponent(Q[id])+'" target="_blank" rel="noopener">실제 사진 보기 ↗</a>':"";}
 
 var WARM={name:"준비운동 10분",how:["실내자전거 5분, 아주 가볍게.","어깨를 작게 앞뒤로 10회 돌리기 (크게 돌리지 않기).","네발 자세에서 허리를 천천히 둥글게·평평하게 5회 (통증 없는 범위만).","선 채로 엉덩이 좌우로 천천히 돌리기 10회."]};
@@ -589,7 +590,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.8.0",newVer=null;
+var APP_VER="v1.9.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -904,7 +905,7 @@ function bindDay(el){
   el.querySelectorAll("[data-kg]").forEach(function(inp){inp.onchange=function(){
     var k=week+"|"+dayK+"|"+inp.dataset.kg;var v=inp.value.trim();if(v)S.kg[k]=v;else delete S.kg[k];save();
   };});
-  el.querySelectorAll("[data-zoom]").forEach(function(b){b.onclick=function(){zoomPic(b.dataset.zoom);};});
+  el.querySelectorAll("[data-zoom]").forEach(function(b){b.onclick=function(){zoomPic(b.dataset.zoom,b.dataset.play);};});
   el.querySelectorAll("[data-pain]").forEach(function(b){b.onclick=function(){var k=dateKeyOf(week,dayK),v=+b.dataset.pain;S.pain=S.pain||{};if(S.pain[k]!==undefined&&+S.pain[k]===v)delete S.pain[k];else S.pain[k]=v;save();keepScroll(function(){renderDay();renderTop();});};});
   el.querySelectorAll("[data-sug]").forEach(function(b){b.onclick=function(){var id=b.dataset.sug,inp=document.getElementById("kg-"+id);inp.value=b.dataset.v;S.kg[week+"|"+dayK+"|"+id]=b.dataset.v;save();b.textContent="적용됨";b.disabled=true;};});
   el.querySelectorAll("[data-start]").forEach(function(b){b.onclick=function(){say("시작합니다");startEx(b.dataset.start);};});
@@ -917,19 +918,22 @@ function bindDay(el){
   var db=document.getElementById("drinkBtn");
   if(db)db.onclick=function(){S.drink[week]=S.drink[week]||{};S.drink[week][dayK]=!S.drink[week][dayK];save();keepScroll(function(){renderDay();renderTop();});};
 }
-function zoomPic(id){
+function zoomPic(id,play){
   var nm=EX[id]?exName(id):CARDIO[id]?CARDIO[id].name:id,ng=(EX[id]&&EX[id].ng)||(CARDIO[id]&&CARDIO[id].ng)||[];
   var real=REALPIC[id],body;
   if(real)body='<div class="zf"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:8px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p>';
   else body=(window.POSE3&&POSE3[id]?'<div class="seg" style="grid-template-columns:repeat('+(POSE3[id].views.length+1)+',1fr)">'+["side"].concat(POSE3[id].views).map(function(v,i){return '<button type="button" data-zv="'+v+'" aria-selected="'+(i===0)+'">'+{side:"옆에서",top:"위에서",front:"앞에서"}[v]+'</button>';}).join("")+'</div><p id="zNote" class="meta" style="margin:0 0 6px;font-size:13px;color:#5B6478"></p>':"")+figSvg(id,0,"zbig")+'<div class="zf"><figure>'+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
   if(!real&&EKPIC[id])body+='<details style="margin-top:10px"><summary style="font-size:13px;font-weight:800;cursor:pointer">근육 그림으로 보기 (참고)</summary><div class="zf" style="margin-top:8px"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세" loading="lazy"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세" loading="lazy"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:6px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p></details>';
   var o=document.createElement("div");o.className="zoomov";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");
-  o.innerHTML='<div class="zb"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>'+esc(nm)+'</b><button class="btn ghost" style="height:36px">닫기</button></div>'+body+(ng.length?'<b style="display:block;margin-top:10px;color:#E5383B;font-size:14px">다치지 않으려면</b><ul>'+ng.map(function(x){return"<li>"+esc(x)+"</li>";}).join("")+'</ul>':"")+(VID[id]?'<p style="margin:10px 0 0">'+vid(id)+' <span style="font-size:12px;color:#5B6478">KAIST 스포츠센터 초보자용 영상. 이 앱의 주의사항과 다르면 주의사항을 따르세요.</span></p>':"")+'</div>';
+  o.innerHTML='<div class="zb"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>'+esc(nm)+'</b><button class="btn ghost" style="height:36px">닫기</button></div>'+body+(ng.length?'<b style="display:block;margin-top:10px;color:#E5383B;font-size:14px">다치지 않으려면</b><ul>'+ng.map(function(x){return"<li>"+esc(x)+"</li>";}).join("")+'</ul>':"")+(YT[id]?'<div id="zVid" style="margin-top:10px"><button type="button" class="btn" data-ytplay="1" style="width:100%">▶ 실제 영상 재생 (유튜브 · KAIST 스포츠센터)</button></div><p style="font-size:12px;color:#5B6478;margin:6px 0 0">유튜브 영상을 앱 안에서 재생합니다(데이터 사용). 이 앱의 주의사항과 다르면 주의사항을 따르세요. <a href="'+VID[id]+'" target="_blank" rel="noopener">원문 보기</a></p>':"")+'</div>';
   o.onclick=function(e){
     var zv=e.target.getAttribute&&e.target.getAttribute("data-zv");
     if(zv){var sv=o.querySelector("svg.zbig");sv.setAttribute("data-view",zv);o.querySelectorAll("[data-zv]").forEach(function(b){b.setAttribute("aria-selected",String(b===e.target));});o.querySelector("#zNote").textContent=(POSE3[id].note&&POSE3[id].note[zv])||"";return;}
+    if(e.target.getAttribute&&e.target.getAttribute("data-ytplay")){playYT();return;}
     if(e.target===o||e.target.tagName==="BUTTON")o.remove();};
+  function playYT(){var z=o.querySelector("#zVid");if(z)z.innerHTML='<div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000"><iframe src="https://www.youtube-nocookie.com/embed/'+YT[id]+'?autoplay=1&playsinline=1&rel=0" title="운동 영상" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe></div><p style="font-size:12px;margin:6px 0 0"><a href="https://youtu.be/'+YT[id]+'" target="_blank" rel="noopener">영상이 안 나오면 유튜브에서 열기</a></p>';}
   document.body.appendChild(o);
+  if(play&&YT[id]){playYT();var zz=o.querySelector("#zVid");if(zz&&zz.scrollIntoView)zz.scrollIntoView({block:"center"});}
 }
 function keepScroll(fn){var y=window.scrollY;fn();window.scrollTo(0,y);}
 
@@ -1018,7 +1022,7 @@ function renderLog(){
     S.bw=S.bw.filter(function(x){return x.d!==d;});S.bw.push(old);save();renderLog();
   };
   var gn=document.getElementById("gymName");if(gn)gn.onchange=function(){S.gymName=gn.value.trim();save();keepScroll(renderLog);};
-  el.querySelectorAll("[data-zoom]").forEach(function(b){b.onclick=function(){zoomPic(b.dataset.zoom);};});
+  el.querySelectorAll("[data-zoom]").forEach(function(b){b.onclick=function(){zoomPic(b.dataset.zoom,b.dataset.play);};});
   el.querySelectorAll("[data-gym]").forEach(function(b){b.onclick=function(){var k=b.dataset.gym,v=b.dataset.v;S.gym[k]=(S.gym[k]===v)?undefined:v;if(!S.gym[k])delete S.gym[k];save();keepScroll(renderLog);};});
   el.querySelectorAll("[data-del]").forEach(function(b){b.onclick=function(){S.bw=S.bw.filter(function(x){return x.d!==b.dataset.del;});save();renderLog();};});
   document.getElementById("startSave").onclick=function(){var v=document.getElementById("startD").value;if(v){S.start=ymd(mondayOf(parse(v)));save();week=curWeek();renderAll();}};

@@ -30,26 +30,36 @@ var FIG=(function(){
   }
   function ln(a,b,w,c,cls){return '<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"'+(cls?' class="'+cls+'"':'')+'/>';}
   var C={shirt:"var(--fig-shirt,#2F5BFF)",shirt2:"var(--fig-shirt2,#2448CC)",skin:"#F1C3A0",skin2:"#D9A27E",pants:"#1E2A4A",pants2:"#141C33",shoe:"#33384A",hair:"#2B2321"};
+  function tp(a,b,r1,r2,c){
+    var dx=b[0]-a[0],dy=b[1]-a[1],d=Math.sqrt(dx*dx+dy*dy)||1,nx=-dy/d,ny=dx/d,F=function(v){return v.toFixed(1);};
+    function circ(p,r){return 'M'+F(p[0]-r)+' '+F(p[1])+'a'+r+' '+r+' 0 1 0 '+(2*r)+' 0a'+r+' '+r+' 0 1 0 '+(-2*r)+' 0Z';}
+    return '<path fill="'+c+'" d="M'+F(a[0]+nx*r1)+' '+F(a[1]+ny*r1)+'L'+F(b[0]+nx*r2)+' '+F(b[1]+ny*r2)+'L'+F(b[0]-nx*r2)+' '+F(b[1]-ny*r2)+'L'+F(a[0]-nx*r1)+' '+F(a[1]-ny*r1)+'Z'+circ(a,r1)+circ(b,r2)+'"/>';
+  }
+  function at(a,b,k){return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k];}
+  function leg(h,k,a,f,far){
+    var sk=far?C.skin2:C.skin,pn=far?C.pants2:C.pants;
+    return tp(k,a,5.3,3.7,sk)+tp(h,k,7.2,5.5,sk)+tp(h,at(h,k,0.62),7.6,6.7,pn)+tp(a,f,4.3,3.3,far?"#24283A":C.shoe);
+  }
+  function arm(s,e,h,far){
+    var sk=far?C.skin2:C.skin,st=far?C.shirt2:C.shirt;
+    return tp(s,e,4.9,4.1,sk)+tp(s,at(s,e,0.55),5.5,5,st)+tp(e,h,4,3.1,sk)+'<circle cx="'+h[0].toFixed(1)+'" cy="'+h[1].toFixed(1)+'" r="3.7" fill="'+sk+'"/>';
+  }
   function person(P){
     var J=joints(P),s="";
-    // 먼 쪽 팔다리 (어둡게)
-    s+=ln(J.hip,J.k2,13,C.pants2)+ln(J.k2,J.a2,9.5,C.skin2)+ln(J.a2,J.f2,6.5,C.shoe);
-    s+=ln(J.sh,J.e2,9,C.shirt2)+ln(J.e2,J.h2,7,C.skin2)+'<circle cx="'+J.h2[0].toFixed(1)+'" cy="'+J.h2[1].toFixed(1)+'" r="4" fill="'+C.skin2+'"/>';
-    // 몸통
-    s+=ln(J.hip,J.sh,19,C.shirt)+ln(J.hip,pt(J.hip,P.t,6),17,C.pants);
-    s+=ln(J.sh,J.neck,6,C.skin);
-    // 가까운 쪽 다리
-    s+=ln(J.hip,J.k1,13.5,C.pants)+ln(J.k1,J.a1,10,C.skin)+ln(J.a1,J.f1,7,C.shoe);
-    // 머리
-    var hr=9;s+='<circle cx="'+J.head[0].toFixed(1)+'" cy="'+J.head[1].toFixed(1)+'" r="'+hr+'" fill="'+C.skin+'"/>';
-    var f=P.face||1,ang=((P.hd===undefined?P.t:P.hd)+90)*Math.PI/180,vx=-f*3.6,vy=-3.2;
-    var back=[J.head[0]+vx*Math.cos(ang)-vy*Math.sin(ang),J.head[1]+vx*Math.sin(ang)+vy*Math.cos(ang)];
-    s+='<circle cx="'+back[0].toFixed(1)+'" cy="'+back[1].toFixed(1)+'" r="7.6" fill="'+C.hair+'"/><circle cx="'+(J.head[0]+f*1.2*Math.cos(ang)).toFixed(1)+'" cy="'+(J.head[1]+f*1.2*Math.sin(ang)+1.5).toFixed(1)+'" r="7.4" fill="'+C.skin+'"/>';
-    // 가까운 쪽 팔
-    s+=ln(J.sh,J.e1,9.5,C.shirt)+ln(J.e1,J.h1,7.5,C.skin)+'<circle cx="'+J.h1[0].toFixed(1)+'" cy="'+J.h1[1].toFixed(1)+'" r="4.3" fill="'+C.skin+'"/>';
+    s+=leg(J.hip,J.k2,J.a2,J.f2,1)+arm(J.sh,J.e2,J.h2,1);
+    s+=tp(J.sh,J.neck,3.4,3.2,C.skin);
+    s+=tp(J.hip,J.sh,8.8,10,C.shirt)+tp(J.hip,pt(J.hip,P.t,7),9,8.9,C.pants);
+    s+=leg(J.hip,J.k1,J.a1,J.f1,0);
+    var f=P.face||1,ang=((P.hd===undefined?P.t:P.hd)+90)*Math.PI/180,ca=Math.cos(ang),sa=Math.sin(ang);
+    function rel(x,y){return [J.head[0]+x*ca-y*sa,J.head[1]+x*sa+y*ca];}
+    var hb=rel(-f*3.4,-3.4),fc=rel(f*1.3,1.4),ey=rel(f*5.2,-0.6),er=rel(-f*1.2,1.2);
+    s+='<circle cx="'+J.head[0].toFixed(1)+'" cy="'+J.head[1].toFixed(1)+'" r="8.8" fill="'+C.skin+'"/>';
+    s+='<circle cx="'+hb[0].toFixed(1)+'" cy="'+hb[1].toFixed(1)+'" r="7.7" fill="'+C.hair+'"/><circle cx="'+fc[0].toFixed(1)+'" cy="'+fc[1].toFixed(1)+'" r="7.3" fill="'+C.skin+'"/>';
+    s+='<circle cx="'+ey[0].toFixed(1)+'" cy="'+ey[1].toFixed(1)+'" r="1" fill="#2B2321"/>';
+    s+=arm(J.sh,J.e1,J.h1,0);
     return {svg:s,J:J};
   }
-  return {person:person,mix:mix,joints:joints,pt:pt,C:C};
+  return {person:person,mix:mix,joints:joints,pt:pt,C:C,tp:tp,leg:leg,arm:arm};
 })();
 /* 정면 사람 (펙덱·리어델트용) */
 FIG.front=function(P){
@@ -58,15 +68,14 @@ FIG.front=function(P){
   var shY=y-34,shL=[x-13,shY],shR=[x+13,shY],hL=[x-7,y],hR=[x+7,y];
   // 다리 (앉은 자세면 짧게)
   var sp=P.spread||0,kL=P.seated?[x-12-sp,y+8]:[x-8,y+30],kR=P.seated?[x+12+sp,y+8]:[x+8,y+30],aL=[kL[0]-1+sp*0.4,kL[1]+28],aR=[kR[0]+1-sp*0.4,kR[1]+28];
-  s+=ln(hL,kL,13,C.pants)+ln(hR,kR,13,C.pants)+ln(kL,aL,9.5,C.skin)+ln(kR,aR,9.5,C.skin)+ln(aL,[aL[0]-5,aL[1]+2],7,C.shoe)+ln(aR,[aR[0]+5,aR[1]+2],7,C.shoe);
+  s+=FIG.leg(hL,kL,aL,[aL[0]-5,aL[1]+2],0)+FIG.leg(hR,kR,aR,[aR[0]+5,aR[1]+2],0);
   s+='<rect x="'+(x-15)+'" y="'+(y-8)+'" width="30" height="12" rx="5" fill="'+C.pants+'"/>';
   s+='<path d="M'+(x-17)+' '+(shY-3)+' Q'+x+' '+(shY-7)+' '+(x+17)+' '+(shY-3)+' L'+(x+14)+' '+(y-2)+' L'+(x-14)+' '+(y-2)+' Z" fill="'+C.shirt+'"/>';
   var eL=pt(shL,P.uaL,L2.ua),wL=pt(eL,P.faL,L2.fa),eR=pt(shR,P.uaR,L2.ua),wR=pt(eR,P.faR,L2.fa);
-  s+=ln(shL,eL,9.5,C.shirt)+ln(eL,wL,7.5,C.skin)+'<circle cx="'+wL[0].toFixed(1)+'" cy="'+wL[1].toFixed(1)+'" r="4.3" fill="'+C.skin+'"/>';
-  s+=ln(shR,eR,9.5,C.shirt)+ln(eR,wR,7.5,C.skin)+'<circle cx="'+wR[0].toFixed(1)+'" cy="'+wR[1].toFixed(1)+'" r="4.3" fill="'+C.skin+'"/>';
+  s+=FIG.arm(shL,eL,wL,0)+FIG.arm(shR,eR,wR,0);
   s+=ln([x,shY-2],[x,shY-8],7,C.skin);
   if(P.back)s+='<circle cx="'+x+'" cy="'+(shY-17)+'" r="9.5" fill="'+C.hair+'"/>';
-  else s+='<circle cx="'+x+'" cy="'+(shY-17)+'" r="9" fill="'+C.skin+'"/><path d="M'+(x-9.3)+' '+(shY-18)+' A9.5 9.5 0 0 1 '+(x+9.3)+' '+(shY-18)+' Q'+x+' '+(shY-24)+' '+(x-9.3)+' '+(shY-18)+'Z" fill="'+C.hair+'"/>';
+  else s+='<circle cx="'+x+'" cy="'+(shY-17)+'" r="9" fill="'+C.skin+'"/><circle cx="'+(x-3.2)+'" cy="'+(shY-15.5)+'" r="1" fill="#2B2321"/><circle cx="'+(x+3.2)+'" cy="'+(shY-15.5)+'" r="1" fill="#2B2321"/><path d="M'+(x-9.3)+' '+(shY-18)+' A9.5 9.5 0 0 1 '+(x+9.3)+' '+(shY-18)+' Q'+x+' '+(shY-24)+' '+(x-9.3)+' '+(shY-18)+'Z" fill="'+C.hair+'"/>';
   return {svg:s,J:{shL:shL,shR:shR,wL:wL,wR:wR,eL:eL,eR:eR,hip:hip,kL:kL,kR:kR,aL:aL,aR:aR}};
 };
 var L2={ua:21,fa:19};
@@ -221,10 +230,14 @@ var F3=(function(){
   function draw(o,view,ox){
     var J=joints(o),V=VIEW[view],P=function(p){var q=V(p);return [q[0]+(ox||0),q[1],q[2]];},C=FIG.C,list=[];
     var cen=P(J.SC)[2]*0.5+P(J.H)[2]*0.5;
-    function L2(a,b,w,c,c2){list.push(seg(P(a),P(b),w,c,c2));}
-    L2(J.hR,J.kR,13,C.pants,C.pants2);L2(J.kR,J.aR,10,C.skin,C.skin2);L2(J.aR,J.tR,7,C.shoe,C.shoe);
-    L2(J.hL,J.kL,13,C.pants,C.pants2);L2(J.kL,J.aL,10,C.skin,C.skin2);L2(J.aL,J.tL,7,C.shoe,C.shoe);
-    L2(J.sR,J.eR,9.5,C.shirt,C.shirt2);L2(J.eR,J.wR,7.5,C.skin,C.skin2);L2(J.sL,J.eL,9.5,C.shirt,C.shirt2);L2(J.eL,J.wL,7.5,C.skin,C.skin2);
+    function L2(a,b,w,c,c2,bias,hand){var g=seg(P(a),P(b),w,c,c2);g.d+=(bias||0);g.hand=hand;list.push(g);}
+    function md(a,b,k){return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];}
+    [["hR","kR","aR","tR","sR","eR","wR"],["hL","kL","aL","tL","sL","eL","wL"]].forEach(function(n){
+      L2(J[n[0]],J[n[1]],[7.2,5.5],C.skin,C.skin2);L2(J[n[0]],md(J[n[0]],J[n[1]],0.62),[7.6,6.7],C.pants,C.pants2,0.02);
+      L2(J[n[1]],J[n[2]],[5.3,3.7],C.skin,C.skin2);L2(J[n[2]],J[n[3]],[4.3,3.3],C.shoe,"#24283A");
+      L2(J[n[4]],J[n[5]],[4.9,4.1],C.skin,C.skin2);L2(J[n[4]],md(J[n[4]],J[n[5]],0.55),[5.5,5],C.shirt,C.shirt2,0.02);
+      L2(J[n[5]],J[n[6]],[4,3.1],C.skin,C.skin2,0,1);
+    });
     var tq=[P(J.sR),P(J.sL),P(J.hL),P(J.hR)],td=(tq[0][2]+tq[1][2]+tq[2][2]+tq[3][2])/4;
     list.push({torso:tq,d:td});
     var hd=P(J.HD);list.push({head:hd,d:hd[2]+0.01});
@@ -239,8 +252,8 @@ var F3=(function(){
         var hair='<circle cx="'+b[0].toFixed(1)+'" cy="'+b[1].toFixed(1)+'" r="8" fill="'+C.hair+'"/>',face='<circle cx="'+((g.head[0]*2+f[0])/3).toFixed(1)+'" cy="'+((g.head[1]*2+f[1])/3).toFixed(1)+'" r="8.2" fill="'+C.skin+'"/>';
         s+=faceNear?hair+face:face+hair;return;}
       var far=g.d<cen-3,c=far?g.c2:g.c;
-      s+='<line x1="'+g.a[0].toFixed(1)+'" y1="'+g.a[1].toFixed(1)+'" x2="'+g.b[0].toFixed(1)+'" y2="'+g.b[1].toFixed(1)+'" stroke="'+c+'" stroke-width="'+g.w+'" stroke-linecap="round"/>';
-      if(g.w===7.5)s+='<circle cx="'+g.b[0].toFixed(1)+'" cy="'+g.b[1].toFixed(1)+'" r="4.2" fill="'+c+'"/>';
+      s+=FIG.tp(g.a,g.b,g.w[0],g.w[1],c);
+      if(g.hand)s+='<circle cx="'+g.b[0].toFixed(1)+'" cy="'+g.b[1].toFixed(1)+'" r="3.7" fill="'+c+'"/>';
     });
     return {svg:s,J:J,P:P};
   }
