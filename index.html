@@ -190,7 +190,8 @@ th{font-size:12px;color:var(--muted);font-weight:600}
 .btn.danger{background:var(--bad);color:#fff}
 .kgg{margin:8px 0 0;padding:10px 12px;border:1px dashed var(--line);border-radius:12px;font-size:14px;line-height:1.5}.kgg ol{margin:4px 0 0;padding-left:20px}.kgg summary{font-weight:800;cursor:pointer}.kgg .kggx{margin:8px 0 0;color:#5B6478}.kgg .kggx b{color:var(--ink)}.seg2{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}.seg2 button{min-width:44px;height:32px;border:1px solid var(--line);border-radius:8px;background:#fff;font-weight:800;font-size:14px;color:var(--ink)}.seg2 button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .callout.kcn.ok{background:#EAF7EF;color:#14603A}
-.msgov{align-items:center;z-index:40}.msgov .msgb{max-width:380px}.msgbtns{display:flex;gap:8px;justify-content:flex-end}.msgbtns .btn{min-width:96px}
+.msgov{align-items:center;z-index:40}.msgov .msgb{max-width:420px;max-height:calc(100vh - 32px);overflow-y:auto}.msgbtns{display:flex;gap:8px;justify-content:flex-end}.msgbtns .btn{min-width:96px}
+.kcg{margin:-2px 0 14px}.kcg p{margin:6px 0}.kcgst{font-size:14px;line-height:1.5;padding:8px 10px;border-radius:10px;background:#EEF3FF;color:#1D3A8A}.kcgst.ok{background:#EAF7EF;color:#14603A}.kcgst.mid{background:#EEF3FF;color:#1D3A8A}.kcgst.bad{background:#FEECEB;color:#B42318}
 .bwlist{list-style:none;margin:10px 0 0;padding:0}
 .bwlist li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .bwlist button{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline}
@@ -412,7 +413,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.34.0"></script>
+<script src="fig.js?v=1.35.0"></script>
 <script>
 (function(){
 "use strict";
@@ -633,7 +634,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.34.0",newVer=null;
+var APP_VER="v1.35.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -1211,7 +1212,7 @@ function renderProf(){
   radios("days","일주일에 헬스장 가는 날",[["3","3일"],["4","4일"],["5","5일"],["6","6일"],["7","7일"]],String(p.days))+
   radios("dur","한 번 운동 시간 (준비운동·마무리 포함, 넘지 않게 맞춥니다)",[["45","45분"],["60","60분"],["75","75분"],["90","90분"],["120","120분"]],String(p.dur||(S.pf?90:60)))+
   radios("kcu","칼로리 소모 목표 (선택)",[["none","정하지 않음"],["day","하루 (운동하는 날)"],["week","일주일 합계"]],p.kcU||"none")+
-  '<div id="pf-kcrow">'+fld("목표 소모량 (kcal)",'<input id="pf-kc" class="num" type="number" inputmode="numeric" min="0" step="10" value="'+(p.kcT||"")+'">')+'<p class="meta" style="margin:6px 0 12px">'+(S.pf?(function(){var wp=weekPlanKcal(curWeek());return "지금 루틴은 일주일 약 "+wp.plan.toLocaleString()+"kcal, 운동하는 날 하루 평균 약 "+Math.round(wp.plan/Math.max(1,wp.n)).toLocaleString()+"kcal입니다. ";})():"")+'목표가 계획보다 높으면 유산소 시간을 얼마나 더할지 알려드립니다. 루틴이 자동으로 늘지는 않습니다.</p></div>'+
+  '<div id="pf-kcrow">'+fld("목표 소모량 (kcal)",'<input id="pf-kc" class="num" type="number" inputmode="numeric" min="0" step="10" value="'+(p.kcT||"")+'">')+'<div id="pf-kcg" class="kcg" aria-live="polite"></div></div>'+
   checks("inj","다쳤거나 아픈 곳 (있으면 모두 선택)",[["back","허리 (디스크 등)"],["shoulder","어깨"],["knee","무릎"],["wrist","손목"]],p.inj)+
   checks("body","체형에서 신경 쓰이는 점 (있으면 모두 선택, 없으면 비워두세요)",[["legs","하체가 굵은 편"],["belly","배·상체 위주로 살이 찜"],["thin","마른 편, 근육이 부족"]],bodyMap(p.body))+
   radios("run","평소 달리기",[["yes","하고 있음"],["no","안 함 / 어려움"]],p.run)+
@@ -1223,6 +1224,38 @@ function renderProf(){
   f.querySelectorAll('input[name="run"]').forEach(function(x){x.onchange=runRow;});runRow();
   function kcRow(){var r=f.querySelector('input[name="kcu"]:checked');document.getElementById("pf-kcrow").hidden=!(r&&r.value!=="none");}
   f.querySelectorAll('input[name="kcu"]').forEach(function(x){x.onchange=kcRow;});kcRow();
+  /* 칼로리 목표 가이드: 폼에 적힌 값으로 루틴을 미리 계산해 가능한 범위를 보여줌 */
+  function fv(n){var x=f.querySelector('input[name="'+n+'"]:checked');return x?x.value:"";}
+  function formPf(){var o={},k;for(k in (S.pf||{}))o[k]=S.pf[k];
+    var inj={},body={};f.querySelectorAll('input[name="inj"]:checked').forEach(function(x){inj[x.value]=true;});f.querySelectorAll('input[name="body"]:checked').forEach(function(x){body[x.value]=true;});
+    o.h=parseFloat(document.getElementById("pf-h").value)||o.h||170;o.w=parseFloat(document.getElementById("pf-w").value)||o.w||70;
+    o.goal=fv("goal")||o.goal||"loss";o.exp=fv("exp")||o.exp||"new";o.days=+(fv("days")||o.days||5);o.dur=+(fv("dur")||o.dur||60);o.inj=inj;o.body=body;
+    o.run=fv("run")||"no";o.runKm=o.run==="yes"?(parseFloat(document.getElementById("pf-km").value)||0):0;o.runMin=o.run==="yes"?(parseFloat(document.getElementById("pf-min").value)||0):0;return o;}
+  function sim(o){var k1=S.pf,k2=PF,k3=PRG,k4=SES,k5=BASE,k6=PRIO;try{S.pf=o;applyProfile();return weekPlanKcal(curWeek());}finally{S.pf=k1;PF=k2;PRG=k3;SES=k4;BASE=k5;PRIO=k6;}}
+  var kcgT=0;
+  var W=function(v){return Math.round(v).toLocaleString();};
+  function kcCalc(){
+    var u=fv("kcu"),o=formPf(),t=parseFloat(document.getElementById("pf-kc").value)||0,b0,b1;
+    try{b0=sim(Object.assign({},o,{kcU:"",kcT:0}));b1=sim(Object.assign({},o,{kcU:"day",kcT:99999}));}catch(e){return null;}
+    var n=Math.max(1,b0.n),r={u:u,o:o,t:t,b0:b0,b1:b1,n:n,avg0:Math.round(b0.plan/n),avg1:Math.round(b1.plan/n),mins:o.days*o.dur};
+    r.tw=u==="day"?t*n:t;r.td=u==="day"?t:t/n;r.cls=!t||!u||u==="none"?"":r.tw<=b0.plan?"ok":r.tw<=b1.plan?"mid":"bad";
+    return r;
+  }
+  function kcGuide(){
+    var box=document.getElementById("pf-kcg"),u=fv("kcu");if(!box)return;if(!u||u==="none"){box.innerHTML="";return;}
+    var r=kcCalc();if(!r){box.innerHTML="";return;}
+    var o=r.o,t=r.t,b0=r.b0,b1=r.b1,avg0=r.avg0,avg1=r.avg1,td=r.td,cls=r.cls,msg;
+    if(!t)msg='목표값을 적으면 이 설정으로 채울 수 있는지 바로 알려드립니다.';
+    else if(cls==="ok"){msg='<b>지금 루틴만으로 채워집니다.</b> 유산소가 늘지 않습니다.';}
+    else if(cls==="mid"){msg='<b>운동하는 날 유산소가 늘어납니다.</b> (러닝 날은 끝난 뒤 걷기 추가) 근력 운동은 그대로입니다.';}
+    else{msg='<b>정한 운동 시간('+o.dur+'분) 안에서는 채울 수 없습니다.</b> 최대 하루 평균 약 '+W(avg1)+'kcal(일주일 약 '+W(b1.plan)+'kcal)까지만 반영됩니다. 운동 시간을 늘리기보다 목표를 낮추는 것을 권합니다.';}
+    var mins=r.mins,h='<p class="kcgst '+cls+'">'+msg+'</p><p class="meta">이 설정(주 '+o.days+'일 · '+o.dur+'분)으로 계산하면<br>· 목표 없이: 운동하는 날 평균 약 <b>'+W(avg0)+'</b>kcal, 일주일 약 <b>'+W(b0.plan)+'</b>kcal<br>· 시간 안에서 최대: 평균 약 <b>'+W(avg1)+'</b>kcal, 일주일 약 <b>'+W(b1.plan)+'</b>kcal'+(t&&u==="week"?'<br>· 적은 목표는 운동하는 날 평균 약 '+W(td)+'kcal입니다.':"")+'</p>';
+    if(mins>420)h+='<p class="meta" style="color:#B42318">일주일 운동 시간이 최대 약 '+mins+'분입니다. 건강 권장량(주 150~300분)이나 감량 기준(주 250분 이상)보다 훨씬 많아 피로·부상 위험이 커집니다. 퇴근 후 운동이면 주 5일 · 60분 정도를 권합니다.</p>';
+    h+='<p class="meta">처음 2~3주는 "정하지 않음"으로 하고, 리포트의 주간 소모량을 보고 정하면 무리 없는 목표를 잡기 쉽습니다. 칼로리는 어림값입니다.</p>';
+    box.innerHTML=h;
+  }
+  function kcQ(){clearTimeout(kcgT);kcgT=setTimeout(kcGuide,150);}
+  f.addEventListener("input",kcQ);f.addEventListener("change",kcQ);kcGuide();
   var cc=document.getElementById("pf-cancel");if(cc)cc.onclick=function(){view="log";renderAll();window.scrollTo(0,0);};
   f.onsubmit=function(ev){
     ev.preventDefault();
@@ -1237,6 +1270,13 @@ function renderProf(){
     else if(kcu==="day"&&!(kc>=100&&kc<=1500))msg="하루 칼로리 목표는 100~1500kcal 사이로 적어주세요.";
     else if(kcu==="week"&&!(kc>=300&&kc<=8000))msg="일주일 칼로리 목표는 300~8000kcal 사이로 적어주세요.";
     if(msg){err.textContent=msg;err.hidden=false;err.scrollIntoView({block:"center"});return;}
+    if(!f._ack){
+      var r=kcCalc(),wn=[];
+      if(r&&r.cls==="bad")wn.push('칼로리 목표 <b>'+(r.u==="day"?"하루 ":"일주일 ")+W(r.t)+'kcal</b>는 정한 운동 시간('+r.o.dur+'분) 안에서 채울 수 없습니다. 최대 운동하는 날 평균 약 <b>'+W(r.avg1)+'kcal</b>(일주일 약 '+W(r.b1.plan)+'kcal)까지만 반영됩니다.');
+      if(r&&r.mins>420)wn.push('일주일 운동 시간이 최대 약 <b>'+r.mins+'분</b>(주 '+r.o.days+'일 × '+r.o.dur+'분)입니다. 건강 권장량(주 150~300분)보다 훨씬 많아 피로·부상 위험이 커집니다. 퇴근 후 운동이면 주 5일 · 60분 정도를 권합니다.');
+      if(wn.length){showMsg("저장하기 전에 확인해 주세요",wn.join("<br><br>"),[["다시 정하기",function(){var x=document.getElementById(r.cls==="bad"?"pf-kc":"pf-kcrow")||f;x.scrollIntoView({block:"center"});if(x.focus)x.focus();},0],["그래도 저장",function(){f._ack=1;f.onsubmit({preventDefault:function(){}});},1]]);return;}
+    }
+    f._ack=0;
     var inj={};f.querySelectorAll('input[name="inj"]:checked').forEach(function(x){inj[x.value]=true;});
     var body={};f.querySelectorAll('input[name="body"]:checked').forEach(function(x){body[x.value]=true;});
     var first=!S.pf;
