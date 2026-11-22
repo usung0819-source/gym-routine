@@ -396,7 +396,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.28.0"></script>
+<script src="fig.js?v=1.29.0"></script>
 <script>
 (function(){
 "use strict";
@@ -610,7 +610,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.28.0",newVer=null;
+var APP_VER="v1.29.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -980,11 +980,12 @@ function zoomPic(id,play){
   var nm=EX[id]?exName(id):CARDIO[id]?CARDIO[id].name:(GNAME[id]||id),ng=(EX[id]&&EX[id].ng)||(CARDIO[id]&&CARDIO[id].ng)||(GCUE[id]?[GCUE[id]]:[]);
   var real=REALPIC[id],body;
   if(real)body='<div class="zf"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:8px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p>';
-  else body=(window.POSE3&&POSE3[id]?'<div class="seg" style="grid-template-columns:repeat('+(POSE3[id].views.length+1)+',1fr)">'+["side"].concat(POSE3[id].views).map(function(v,i){return '<button type="button" data-zv="'+v+'" aria-selected="'+(i===0)+'">'+{side:"옆에서",top:"위에서",front:"앞에서"}[v]+'</button>';}).join("")+'</div><p id="zNote" class="meta" style="margin:0 0 6px;font-size:13px;color:#5B6478"></p>':"")+figSvg(id,0,"zbig")+'<div class="zf"><figure>'+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
+  else body=(window.POSE3&&POSE3[id]?'<div class="seg" style="grid-template-columns:repeat('+(POSE3[id].views.length+(POSE3[id].noSide?0:1))+',1fr)">'+(POSE3[id].noSide?[]:["side"]).concat(POSE3[id].views).map(function(v,i){return '<button type="button" data-zv="'+v+'" aria-selected="'+(i===0)+'">'+{side:"옆에서",top:"위에서",front:"앞에서"}[v]+'</button>';}).join("")+'</div><p id="zNote" class="meta" style="margin:0 0 6px;font-size:13px;color:#5B6478"></p>':"")+figSvg(id,0,"zbig")+(window.POSE3&&POSE3[id]&&POSE3[id].noSide?'<div class="zf" hidden><figure>':'<div class="zf"><figure>')+figSvg(id,0,"still")+'<figcaption>시작 자세</figcaption></figure><figure>'+figSvg(id,1,"still")+'<figcaption>'+(FIG_CYC[id]?"반대쪽":POSES[id].f2?"왼팔·오른다리":"끝 자세")+'</figcaption></figure>'+(POSES[id].f2?'<figure>'+figSvg(id,1,"still",1)+'<figcaption>오른팔·왼다리</figcaption></figure>':"")+'</div>';
   if(AIV[id])body='<video class="aivbig" src="'+aivSrc(id)+'" poster="'+aivSrc(id,"poster")+'" muted autoplay loop playsinline controls></video>'+(AIV[id].test?'<p style="font-size:13px;font-weight:800;color:#D92D20;margin:6px 0 0">⚠ 테스트용 영상입니다(관리자에게만 보임). 자세가 맞지 않으니 따라 하지 마세요. '+AIV[id].test+'</p>':'')+'<p style="font-size:12px;color:#5B6478;margin:6px 0 0">AI로 만든 시범 영상입니다 (Google Flow · Veo). 실제 인물이 아닙니다. '+(AIV[id].note?AIV[id].note:AIV[id].side?'스트레칭을 시작하면 처음 몇 초 동안 이 동작을 천천히 보여주고 끝 자세에서 멈춥니다. 영상은 '+AIV[id].part+' 쪽입니다. 반대쪽은 좌우가 바뀐 영상으로 나옵니다.':'운동을 시작하면 숫자 박자에 맞춰 같은 영상이 움직입니다.')+(AIV[id].both?' 영상은 오른팔·왼다리 쪽입니다. 반대쪽은 진행 화면에서 좌우가 바뀐 영상으로 나옵니다.':'')+'</p>'+(PH3[id]?ph3Html(id):window.POSE3&&POSE3[id]?'<details style="margin-top:10px"><summary style="font-size:13px;font-weight:800;cursor:pointer">다른 방향에서 보기 (그림)</summary><div style="margin-top:8px">'+body+'</div></details>':'');
   if(!real&&EKPIC[id])body+='<details style="margin-top:10px"><summary style="font-size:13px;font-weight:800;cursor:pointer">근육 그림으로 보기 (참고)</summary><div class="zf" style="margin-top:8px"><figure><img src="img/ex/'+id+'-1.svg" alt="시작 자세" loading="lazy"><figcaption>시작 자세</figcaption></figure><figure><img src="img/ex/'+id+'-2.svg" alt="힘쓰는 자세" loading="lazy"><figcaption>힘쓰는 자세</figcaption></figure></div><p style="font-size:12px;color:#5B6478;margin:6px 0 0">그림: Everkinetic (CC BY-SA 4.0)</p></details>';
   var o=document.createElement("div");o.className="zoomov";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");
   o.innerHTML='<div class="zb"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>'+esc(nm)+'</b><button class="btn ghost" style="height:36px">닫기</button></div>'+body+(ng.length?'<b style="display:block;margin-top:10px;color:#E5383B;font-size:14px">다치지 않으려면</b><ul>'+ng.map(function(x){return"<li>"+esc(x)+"</li>";}).join("")+'</ul>':"")+(YT[id]?'<div id="zVid" style="margin-top:10px"><button type="button" class="btn" data-ytplay="1" style="width:100%">▶ 실제 영상 재생 (유튜브 · KAIST 스포츠센터)</button></div><p style="font-size:12px;color:#5B6478;margin:6px 0 0">유튜브 영상을 앱 안에서 재생합니다(데이터 사용). 이 앱의 주의사항과 다르면 주의사항을 따르세요. <a href="'+VID[id]+'" target="_blank" rel="noopener">원문 보기</a></p>':"")+'</div>';
+  if(window.POSE3&&POSE3[id]&&POSE3[id].noSide){var sv0=o.querySelector("svg.zbig"),v0=POSE3[id].views[0];if(sv0){sv0.setAttribute("data-view",v0);var zn0=o.querySelector("#zNote");if(zn0)zn0.textContent=(POSE3[id].note&&POSE3[id].note[v0])||"";}}
   o.onclick=function(e){
     var zv=e.target.getAttribute&&e.target.getAttribute("data-zv");
     if(zv){var sv=o.querySelector("svg.zbig");sv.setAttribute("data-view",zv);o.querySelectorAll("[data-zv]").forEach(function(b){b.setAttribute("aria-selected",String(b===e.target));});o.querySelector("#zNote").textContent=(POSE3[id].note&&POSE3[id].note[zv])||"";return;}
