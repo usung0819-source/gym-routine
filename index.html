@@ -412,7 +412,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.33.0"></script>
+<script src="fig.js?v=1.33.1"></script>
 <script>
 (function(){
 "use strict";
@@ -629,7 +629,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.33.0",newVer=null;
+var APP_VER="v1.33.1",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -762,10 +762,11 @@ function kgGuessHtml(id){
   var h='<div class="kgg"><details><summary>처음이면 이렇게 찾으세요</summary><ol><li>'+unit+'에서 10회 해 봅니다.</li><li>너무 가벼우면 '+(db?"한 단계 무거운 덤벨로":"한 칸 내려")+' 다시 10회.</li><li>'+repsOf(id)+'가 약간 힘들지만 자세가 흐트러지지 않는 무게를 위 칸에 적으세요.</li></ol></details>';
   if(KGCOEF[id]){
     var sx=sexPref(),g=kgGuess(id),inj=(PF&&PF.inj)||{},warn=(id==="legpress"?(inj.back||inj.knee):inj.shoulder)?" 불편한 부위가 있으니 더 가볍게 시작하세요.":"";
-    if(id==="legpress"&&PRG&&PRG.light)h+='<p class="kggx">하체를 가볍게(15~20회) 하는 설정이라 예상 무게 대신 위 방법으로 가볍게 찾으세요.</p>';
+    if(id==="legpress"&&PRG&&PRG.light&&sx&&g)h+='<p class="kggx">예상 무게(예시, '+(sx==="F"?"여":"남")+') <b class="num">'+g.st+'kg</b> 이하에서 시작하세요. 하체를 가볍게(15~20회) 하는 설정이라 시작 값만 보여드립니다. 20회가 편한 무게를 찾으세요.</p>';
     else if(!sx)h+='<p class="kggx">예상 무게(예시)는 성별이 필요합니다. <button type="button" class="linkbtn" data-goprof="1">내 정보에서 성별 선택</button></p>';
     else h+='<p class="kggx">예상 무게(예시, '+(sx==="F"?"여":"남")+') '+(g?(warn?'<b class="num">'+g.st+'kg</b> 이하에서 시작하세요. 불편한 부위가 있어 위쪽 범위는 보여드리지 않습니다. 기구마다 무게가 달라 참고용입니다.':'<b class="num">'+g.st+'kg</b>부터 시작해 <b class="num">'+g.tr+'kg</b>쯤까지. 기구마다 무게가 달라 참고용입니다.'):'몸무게로는 계산이 어려워 위 방법으로 찾으세요.')+'</p>';
   }
+  else h+='<p class="kggx">이 운동은 근거로 삼을 계산식이 없어 예상 무게를 보여드리지 않습니다. 위 방법으로 찾으세요.</p>';
   return h+'</div>';
 }
 document.addEventListener("click",function(e){var b=e.target&&e.target.closest&&e.target.closest("[data-goprof]");if(!b)return;view="prof";renderAll();setTimeout(function(){var x=document.getElementById("fs-sex");if(x)x.scrollIntoView({block:"center"});},50);});
@@ -1229,7 +1230,7 @@ function profCard(){
   '<tr><th>BMI</th><td class="num">'+b.toFixed(1)+' ('+bmiCat(b)+')</td></tr>'+
   '<tr><th>목표</th><td>'+gm[p.goal]+' · 주 '+p.days+'일</td></tr>'+
   '<tr><th>운동 시간</th><td class="num">한 번 최대 '+(p.dur||90)+'분</td></tr>'+
-  (p.kcT>0&&p.kcU?'<tr><th>칼로리 목표</th><td class="num">'+(p.kcU==="day"?"하루":"일주일")+' '+p.kcT.toLocaleString()+'kcal</td></tr>':"")+
+  '<tr><th>칼로리 목표</th><td class="num">'+(p.kcT>0&&p.kcU?(p.kcU==="day"?"하루":"일주일")+' '+p.kcT.toLocaleString()+'kcal':'<span class="meta">정하지 않음 · 아래 "정보 수정"에서 정할 수 있습니다</span>')+'</td></tr>'+
   '<tr><th>경험</th><td>'+em[p.exp]+'</td></tr>'+
   '<tr><th>아픈 곳</th><td>'+injText(p.inj)+'</td></tr>'+
   '<tr><th>체형</th><td>'+(Object.keys(bodyMap(p.body)).filter(function(k){return bodyMap(p.body)[k]&&bm[k];}).map(function(k){return bm[k];}).join(", ")||"특별히 없음")+'</td></tr>'+
