@@ -192,6 +192,7 @@ th{font-size:12px;color:var(--muted);font-weight:600}
 .callout.kcn.ok{background:#EAF7EF;color:#14603A}
 .msgov{align-items:center;z-index:40}.msgov .msgb{max-width:420px;max-height:calc(100vh - 32px);overflow-y:auto}.msgbtns{display:flex;gap:8px;justify-content:flex-end}.msgbtns .btn{min-width:96px}
 .kcg{margin:-2px 0 14px}.kcg p{margin:6px 0}.kcgst{font-size:14px;line-height:1.5;padding:8px 10px;border-radius:10px;background:#EEF3FF;color:#1D3A8A}.kcgst.ok{background:#EAF7EF;color:#14603A}.kcgst.mid{background:#EEF3FF;color:#1D3A8A}.kcgst.bad{background:#FEECEB;color:#B42318}
+.alrow{display:grid;grid-template-columns:22px minmax(0,1fr) 136px 34px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line,#E6EAF2)}.alrow:last-child{border-bottom:0}.alt{font-size:13px;color:var(--sub,#5b6475);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.alrow input[type=time]{width:136px;font-size:14px;padding:6px 4px}.alst{margin-top:12px}.alok{color:#14603A;font-weight:700;margin:0 0 8px}.almsg{margin:10px 0 0;font-size:14px;background:#EEF3FF;color:#1D3A8A;padding:8px 10px;border-radius:10px}
 .bwlist{list-style:none;margin:10px 0 0;padding:0}
 .bwlist li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .bwlist button{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline}
@@ -340,7 +341,7 @@ import {getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs} from "https
 try{
   const app=initializeApp(window.FIREBASE_CONFIG);
   const auth=getAuth(app);auth.languageCode="ko";
-  window.FB={auth,db:getFirestore(app),onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,deleteUser,doc,getDoc,setDoc,deleteDoc,collection,getDocs};
+  window.FB={app,auth,db:getFirestore(app),onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,deleteUser,doc,getDoc,setDoc,deleteDoc,collection,getDocs};
 }catch(e){window.FB_ERR=String(e&&e.message||e);}
 window.dispatchEvent(new Event("fb-ready"));
 </script>
@@ -413,7 +414,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.35.0"></script>
+<script src="fig.js?v=1.36.0"></script>
 <script>
 (function(){
 "use strict";
@@ -634,7 +635,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.35.0",newVer=null;
+var APP_VER="v1.36.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -1160,7 +1161,7 @@ function trend(list,key,unit,label){
 function renderLog(){
   var el=document.getElementById("v-log");
   var list=S.bw.slice().sort(function(a,b){return a.d<b.d?-1:1;});
-  var h=profCard()+'<h2 style="margin-top:22px">체중 · 허벅지 기록</h2><div class="card"><div class="row"><label for="bwDate" class="meta">날짜</label><input id="bwDate" type="date" value="'+ymd(today)+'"></div><div class="row" style="margin-top:8px"><label for="bwKg" class="meta">체중</label><input id="bwKg" class="num" type="number" inputmode="decimal" step="0.1" min="0" placeholder="kg" style="width:90px"><label for="bwTh" class="meta">허벅지</label><input id="bwTh" class="num" type="number" inputmode="decimal" step="0.5" min="0" placeholder="cm" style="width:90px"><button class="btn" id="bwSave">저장</button></div>';
+  var h=profCard()+alarmCard()+'<h2 style="margin-top:22px">체중 · 허벅지 기록</h2><div class="card"><div class="row"><label for="bwDate" class="meta">날짜</label><input id="bwDate" type="date" value="'+ymd(today)+'"></div><div class="row" style="margin-top:8px"><label for="bwKg" class="meta">체중</label><input id="bwKg" class="num" type="number" inputmode="decimal" step="0.1" min="0" placeholder="kg" style="width:90px"><label for="bwTh" class="meta">허벅지</label><input id="bwTh" class="num" type="number" inputmode="decimal" step="0.5" min="0" placeholder="cm" style="width:90px"><button class="btn" id="bwSave">저장</button></div>';
   h+='<p class="meta" style="margin:8px 0 0">체중은 주 1~2회 아침 공복에. 허벅지는 한 달에 한 번, 같은 다리의 가장 굵은 부위를 서서 잽니다. 둘 중 하나만 적어도 됩니다.</p>';
   h+=trend(list,"kg","kg","체중")+trend(list,"th","cm","허벅지");
   h+='<ul class="bwlist">'+list.slice().reverse().slice(0,24).map(function(x){return'<li><span class="num">'+x.d+'</span><span class="num">'+(x.kg?"<b>"+x.kg+"kg</b>":"")+(x.kg&&x.th?" · ":"")+(x.th?"허벅지 "+x.th+"cm":"")+' <button data-del="'+x.d+'">삭제</button></span></li>';}).join("")+"</ul></div>";
@@ -1171,7 +1172,7 @@ function renderLog(){
   h+='<div class="card"><div class="row"><label for="startD">1주차 시작일</label><input id="startD" type="date" value="'+S.start+'"><button class="btn ghost" id="startSave">적용</button></div><p class="meta" style="margin:8px 0 0">시작일이 속한 주의 월요일부터 1주차로 셉니다. 현재 '+curWeek()+'주차.</p></div>';
   h+='<div class="card"><p class="meta" style="margin:0 0 8px">'+syncNote()+'</p><button class="btn ghost" id="resetBtn">모든 기록 지우기</button><span id="resetConfirm" hidden> <button class="btn danger" id="resetYes">정말 지우기</button> <button class="btn ghost" id="resetNo">취소</button></span></div>';
   el.innerHTML=h;
-  bindAccount();
+  bindAccount();bindAlarm();
   var rb=document.getElementById("refreshBtn");if(rb)rb.onclick=doRefresh;
   var ib=document.getElementById("installBtn");if(ib)ib.onclick=function(){if(!instEv)return;instEv.prompt();instEv.userChoice.then(function(){instEv=null;keepScroll(renderLog);}).catch(function(){});};
   el.querySelectorAll("[data-theme-set]").forEach(function(b){b.onclick=function(){S.theme=b.dataset.themeSet;applyTheme(S.theme);save();keepScroll(renderLog);};});
@@ -1320,7 +1321,7 @@ function flush(){
   if(!user||!ready)return Promise.resolve();
   if(writing){pending=true;return Promise.resolve();}
   writing=true;var u=user;
-  return FB.setDoc(userRef(),{json:JSON.stringify(S),updatedAt:Date.now()}).then(function(){writing=false;if(u===user){sync="server";pushBoard();}if(pending){pending=false;return flush();}}).catch(function(e){writing=false;sync=(e&&e.code==="resource-exhausted")?"full":"error";});
+  return FB.setDoc(userRef(),{json:JSON.stringify(S),updatedAt:Date.now()}).then(function(){writing=false;if(u===user){sync="server";pushBoard();pushSync();}if(pending){pending=false;return flush();}}).catch(function(e){writing=false;sync=(e&&e.code==="resource-exhausted")?"full":"error";});
 }
 function loadUser(u){
   user=u;ready=false;localKey=KEY+"-"+u.uid;renderAll();
@@ -1335,6 +1336,7 @@ function loadUser(u){
 function finishLoad(){
   ready=true;if(S.theme)applyTheme(S.theme);if(!S.start)S.start=ymd(mondayOf(today));lsSet(localKey,S);
   applyProfile();week=curWeek();dayK=todayKey;view="day";syncRunLabels();renderAll();
+  setTimeout(function(){pushSync();},1500);
 }
 function boot(){
   if(!window.FIREBASE_CONFIG||!window.FIREBASE_CONFIG.apiKey||/여기에|YOUR_/.test(window.FIREBASE_CONFIG.apiKey)){fbState="noconfig";renderAll();return;}
@@ -1491,6 +1493,109 @@ function pushBoard(){
   var p=boardPayload(),key=JSON.stringify(p);if(key===lastBoard)return Promise.resolve();
   p.at=Date.now();
   return FB.setDoc(FB.doc(FB.db,"board",user.uid),p).then(function(){lastBoard=key;}).catch(function(){});
+}
+/* ---------- 요일별 운동 알림 (웹 푸시) ----------
+   이 기기 토큰 + 요일별 시간 + 앞으로 14일 운동 계획을 push/{uid}에 올리면,
+   GitHub Actions(.github/push/send.js)가 10분마다 확인해 보냄. 발송 기록은 pushlog/{uid}(서버만 씀). */
+var VAPID="";
+var pushMsg="",pushBusy=false,lastPush="";
+function weekOfDate(dt){var diff=Math.round((mondayOf(dt)-mondayOf(parse(S.start)))/86400000);return Math.floor(diff/7)+1;}
+function pushPlan(){
+  var days={},wk={};
+  ORDER.forEach(function(d){if(BASE[d]&&SES[BASE[d]])wk[d]=String(SES[BASE[d]].title).slice(0,40);});
+  for(var i=0;i<14;i++){
+    var dt=new Date(today.getFullYear(),today.getMonth(),today.getDate()+i),w=weekOfDate(dt);if(w<1)continue;
+    var d=ORDER[(dt.getDay()+6)%7],it=plan(w)[d];
+    if(it.t==="s"){var D=sesOf(w,d,it);days[ymd(dt)]={t:"s",ti:String(SES[it.s].title).slice(0,40),m:minutes(w,D)};}
+    else days[ymd(dt)]={t:it.t};
+  }
+  return {days:days,wk:wk};
+}
+function pushKey(){return "gym_push_tok-"+(user?user.uid:"");}
+function pushTok(){try{return localStorage.getItem(pushKey())||"";}catch(e){return "";}}
+function pushRef(){return FB.doc(FB.db,"push",user.uid);}
+function pushErrText(e){var c=e&&e.code||"";return c==="permission-denied"?"서버 권한 설정(보안 규칙)이 아직 적용되지 않았습니다. 관리자에게 알려주세요.":"저장하지 못했습니다. 인터넷 연결을 확인하고 다시 눌러주세요.";}
+function pushSync(force){
+  if(!user||!ready||!S.pushOn||!PF||!window.FB)return Promise.resolve();
+  var pl=pushPlan(),p={on:true,times:S.alarm||{},days:pl.days,wk:pl.wk,tz:"Asia/Seoul"},key=JSON.stringify(p);
+  if(!force&&key===lastPush)return Promise.resolve();
+  p.at=Date.now();
+  return FB.setDoc(pushRef(),p,{merge:true}).then(function(){lastPush=key;}).catch(function(){});
+}
+function pushSupport(){
+  var ios=/iPhone|iPad|iPod/.test(navigator.userAgent),standalone=window.navigator.standalone===true||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+  if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window))
+    return ios&&!standalone?"아이폰·아이패드는 사파리에서 <b>공유 → 홈 화면에 추가</b>를 한 뒤, 홈 화면 아이콘으로 열어야 알림을 받을 수 있습니다(iOS 16.4 이상).":"이 브라우저는 알림을 지원하지 않습니다. 안드로이드는 크롬으로 열어 주세요.";
+  return "";
+}
+async function pushEnable(){
+  if(pushBusy)return;pushBusy=true;pushMsg="알림을 켜는 중입니다…";keepScroll(renderLog);
+  try{
+    var perm=await Notification.requestPermission();
+    if(perm!=="granted"){pushMsg="알림이 허용되지 않았습니다. 크롬 주소창 왼쪽 아이콘 → 권한 → 알림을 <b>허용</b>으로 바꾼 뒤 다시 눌러주세요.";return;}
+    var reg=await navigator.serviceWorker.register("sw.js",{scope:"./"});await navigator.serviceWorker.ready;
+    var M=await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-messaging.js");
+    if(M.isSupported&&!(await M.isSupported())){pushMsg="이 브라우저는 알림을 지원하지 않습니다.";return;}
+    var tok=await M.getToken(M.getMessaging(FB.app),{vapidKey:VAPID,serviceWorkerRegistration:reg});
+    if(!tok){pushMsg="알림 등록에 실패했습니다. 잠시 뒤 다시 눌러주세요.";return;}
+    var snap=null;try{snap=await FB.getDoc(pushRef());}catch(e){if(e&&e.code==="permission-denied")throw e;}
+    var toks=(snap&&snap.exists()&&snap.data().tokens)||[];if(toks.indexOf(tok)<0)toks.push(tok);toks=toks.slice(-10);
+    var pl=pushPlan();
+    await FB.setDoc(pushRef(),{on:true,tokens:toks,times:S.alarm||{},days:pl.days,wk:pl.wk,tz:"Asia/Seoul",at:Date.now()},{merge:true});
+    try{localStorage.setItem(pushKey(),tok);}catch(e){}
+    S.pushOn=true;save();lastPush="";
+    pushMsg=Object.keys(S.alarm||{}).some(function(k){return S.alarm[k];})?"이 기기에서 알림을 받습니다.":"알림을 켰습니다. 아래에서 요일별 시간을 정해야 알림이 옵니다.";
+  }catch(e){pushMsg=(e&&e.code==="permission-denied")?pushErrText(e):"알림을 켜지 못했습니다. ("+esc(String(e&&e.message||e).slice(0,80))+")";}
+  finally{pushBusy=false;keepScroll(renderLog);}
+}
+async function pushDisable(){
+  if(pushBusy)return;pushBusy=true;
+  try{
+    var tok=pushTok(),snap=await FB.getDoc(pushRef()),toks=((snap.exists()&&snap.data().tokens)||[]).filter(function(t){return t!==tok;});
+    await FB.setDoc(pushRef(),{tokens:toks,on:toks.length>0,at:Date.now()},{merge:true});
+    try{localStorage.removeItem(pushKey());}catch(e){}
+    try{var M=await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-messaging.js");await M.deleteToken(M.getMessaging(FB.app));}catch(e){}
+    if(!toks.length){S.pushOn=false;save();}
+    pushMsg=toks.length?"이 기기 알림을 껐습니다. 다른 기기("+toks.length+"대)에는 계속 옵니다.":"알림을 껐습니다.";
+  }catch(e){pushMsg=pushErrText(e);}
+  finally{pushBusy=false;keepScroll(renderLog);}
+}
+async function pushTestLocal(){
+  try{var reg=await navigator.serviceWorker.getRegistration("./");if(!reg)throw 0;
+    await reg.showNotification("알림 테스트 (이 기기)",{body:"이렇게 보입니다. 서버 알림은 '서버에서 보내 보기'로 확인하세요.",icon:"icon-192.png",tag:"gym-local"});pushMsg="이 기기 테스트 알림을 띄웠습니다. 안 보이면 휴대폰 설정의 알림 권한을 확인하세요.";}
+  catch(e){pushMsg="테스트 알림을 띄우지 못했습니다. 먼저 '이 기기에서 알림 받기'를 눌러주세요.";}
+  keepScroll(renderLog);
+}
+function pushTestServer(){
+  FB.setDoc(pushRef(),{test:Date.now()},{merge:true}).then(function(){pushMsg="서버에 테스트를 요청했습니다. 보통 10~20분 안에 옵니다(서버가 바쁘면 더 늦을 수 있음).";keepScroll(renderLog);}).catch(function(e){pushMsg=pushErrText(e);keepScroll(renderLog);});
+}
+function alarmCard(){
+  if(!S.pf)return "";
+  var A=S.alarm||{},on=!!pushTok(),sup=pushSupport(),perm=("Notification" in window)?Notification.permission:"";
+  var h='<h2 style="margin-top:22px">운동 알림</h2><div class="card alcard">';
+  h+='<p class="meta" style="margin:0 0 10px">정한 요일·시간에 그날 운동을 알려드립니다. <b>술약속·회복일·쉬는 날은 보내지 않습니다.</b> 서버 사정으로 5~30분 늦게 올 수 있어, 정각·30분보다 <b>18:37</b>처럼 맞추면 덜 늦습니다.</p>';
+  h+='<div class="allist">'+ORDER.map(function(d){var t=BASE[d]&&SES[BASE[d]]?esc(SES[BASE[d]].title):'<span style="color:var(--mut,#8a94a6)">쉬는 날</span>';
+    return '<div class="alrow"><b class="ald">'+LABEL[d]+'</b><span class="alt">'+t+'</span><input type="time" data-al="'+d+'" value="'+esc(A[d]||"")+'" aria-label="'+LABEL[d]+'요일 알림 시간">'+(A[d]?'<button type="button" class="linkbtn" data-alclr="'+d+'">끄기</button>':'<span class="alx"></span>')+'</div>';}).join("")+'</div>';
+  h+='<div class="row" style="margin-top:8px;flex-wrap:wrap"><input type="time" id="alAll" value="18:37" aria-label="한꺼번에 넣을 시간"><button type="button" class="btn ghost" id="alAllBtn">운동하는 날 모두 이 시간으로</button></div>';
+  h+='<div class="alst">';
+  if(!VAPID)h+='<p class="meta">관리자가 알림 서버를 설정하는 중입니다. 시간은 미리 정해 둘 수 있습니다.</p>';
+  else if(sup)h+='<p class="meta">'+sup+'</p>';
+  else if(perm==="denied")h+='<p class="meta" style="color:#B42318">이 기기에서 알림이 차단되어 있습니다. 크롬 주소창 왼쪽 아이콘(또는 설정 → 사이트 설정 → 알림)에서 <b>허용</b>으로 바꾼 뒤 아래 버튼을 누르세요.</p><button type="button" class="btn" id="pushOn" style="width:100%">이 기기에서 알림 받기</button>';
+  else if(on)h+='<p class="alok">✓ 이 기기에서 알림을 받고 있습니다.</p><div class="row" style="flex-wrap:wrap;gap:8px"><button type="button" class="btn ghost" id="pushTestL">이 기기에서 바로 보기</button><button type="button" class="btn ghost" id="pushTestS">서버에서 보내 보기</button><button type="button" class="linkbtn" id="pushOff">이 기기 알림 끄기</button></div>';
+  else h+='<button type="button" class="btn" id="pushOn" style="width:100%"'+(pushBusy?" disabled":"")+'>이 기기에서 알림 받기</button><p class="meta" style="margin:6px 0 0">휴대폰·태블릿마다 한 번씩 눌러야 그 기기로 옵니다.</p>';
+  if(pushMsg)h+='<p class="almsg" role="status">'+pushMsg+'</p>';
+  return h+'</div></div>';
+}
+function bindAlarm(){
+  var el=document.getElementById("v-log");if(!el)return;
+  el.querySelectorAll("[data-al]").forEach(function(x){x.onchange=function(){S.alarm=S.alarm||{};var v=/^\d{2}:\d{2}$/.test(x.value)?x.value:"";if(v)S.alarm[x.getAttribute("data-al")]=v;else delete S.alarm[x.getAttribute("data-al")];save();keepScroll(renderLog);};});
+  el.querySelectorAll("[data-alclr]").forEach(function(b){b.onclick=function(){if(S.alarm)delete S.alarm[b.getAttribute("data-alclr")];save();keepScroll(renderLog);};});
+  var ab=document.getElementById("alAllBtn");if(ab)ab.onclick=function(){var v=document.getElementById("alAll").value;if(!/^\d{2}:\d{2}$/.test(v))return;S.alarm=S.alarm||{};ORDER.forEach(function(d){if(BASE[d])S.alarm[d]=v;});save();pushMsg="운동하는 날을 모두 "+v+"로 맞췄습니다.";keepScroll(renderLog);};
+  var b;
+  if((b=document.getElementById("pushOn")))b.onclick=pushEnable;
+  if((b=document.getElementById("pushOff")))b.onclick=pushDisable;
+  if((b=document.getElementById("pushTestL")))b.onclick=pushTestLocal;
+  if((b=document.getElementById("pushTestS")))b.onclick=pushTestServer;
 }
 function boardCard(){
   var h='<h2 style="margin-top:22px">친구 순위표</h2><div class="card">';

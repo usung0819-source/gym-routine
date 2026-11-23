@@ -53,6 +53,21 @@ service cloud.firestore {
       allow delete: if isSelf(uid) || isAdmin();
     }
 
+    // 운동 알림 설정: 본인만 읽고 씀(승인된 사람). 서버(GitHub Actions, 관리자 키)는 규칙과 상관없이 읽음.
+    match /push/{uid} {
+      allow read, delete: if isSelf(uid);
+      allow create, update: if isSelf(uid) && (isApproved() || isAdmin())
+        && request.resource.data.keys().hasOnly(['on', 'tokens', 'times', 'days', 'wk', 'tz', 'at', 'test'])
+        && (!('tokens' in request.resource.data) || (request.resource.data.tokens is list && request.resource.data.tokens.size() <= 10))
+        && (!('times' in request.resource.data) || request.resource.data.times is map)
+        && (!('days' in request.resource.data) || request.resource.data.days is map);
+    }
+
+    // 알림 발송 기록: 서버만 씀. 사용자 앱에서는 읽기·쓰기 모두 막음.
+    match /pushlog/{uid} {
+      allow read, write: if false;
+    }
+
     // 그 밖의 모든 경로는 막습니다.
     match /{document=**} {
       allow read, write: if false;
