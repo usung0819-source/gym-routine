@@ -343,6 +343,10 @@ POSES.chestpress={bg:FLOOR,
 POSES.lateral={front:1,bg:FLOOR,
   fg:function(J){return DB(J.wL)+DB(J.wR);},
   f:[{hip:[100,68],uaL:98,faL:94,uaR:82,faR:86},{hip:[100,68],uaL:182,faL:176,uaR:-2,faR:4}]};
+/* 수트케이스 홀드: 앞에서 본 모습. 왼손에 덤벨, 몸통이 기울지 않게 버팀(정지 동작이라 두 장면이 같음) */
+POSES.suitcase={front:1,bg:FLOOR,
+  fg:function(J){var p=J.wR;return R(p[0]-1.5,p[1]-3,3,9,"#3A4256",1)+Ci([p[0],p[1]-3],5.5,"#3A4256")+Ci([p[0],p[1]+7],5.5,"#3A4256");},
+  f:[{hip:[100,68],uaL:93,faL:91,uaR:87,faR:89},{hip:[100,68],uaL:93,faL:91,uaR:87,faR:89}]};
 POSES.curl={bg:FLOOR,
   m:function(J){return seat(62,98,40)+R(58,42,9,60,MD,4);},
   fg:function(J){return DB(J.h1);},
