@@ -193,6 +193,7 @@ th{font-size:12px;color:var(--muted);font-weight:600}
 .msgov{align-items:center;z-index:40}.msgov .msgb{max-width:420px;max-height:calc(100vh - 32px);overflow-y:auto}.msgbtns{display:flex;gap:8px;justify-content:flex-end}.msgbtns .btn{min-width:96px}
 .kcg{margin:-2px 0 14px}.kcg p{margin:6px 0}.kcgst{font-size:14px;line-height:1.5;padding:8px 10px;border-radius:10px;background:#EEF3FF;color:#1D3A8A}.kcgst.ok{background:#EAF7EF;color:#14603A}.kcgst.mid{background:#EEF3FF;color:#1D3A8A}.kcgst.bad{background:#FEECEB;color:#B42318}
 .alrow{display:grid;grid-template-columns:22px minmax(0,1fr) 136px 34px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line,#E6EAF2)}.alrow:last-child{border-bottom:0}.alt{font-size:13px;color:var(--sub,#5b6475);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.alrow input[type=time]{width:136px;font-size:14px;padding:6px 4px}.alst{margin-top:12px}.alok{color:#14603A;font-weight:700;margin:0 0 8px}.almsg{margin:10px 0 0;font-size:14px;background:#EEF3FF;color:#1D3A8A;padding:8px 10px;border-radius:10px}
+.ruler{width:100%;margin:10px 0 2px;accent-color:#2F5BFF;height:28px}.rulerlab{display:flex;justify-content:space-between;font-size:13px;color:var(--sub,#5b6475);padding:0 4px}
 .bwlist{list-style:none;margin:10px 0 0;padding:0}
 .bwlist li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .bwlist button{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline}
@@ -414,7 +415,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.38.0"></script>
+<script src="fig.js?v=1.39.0"></script>
 <script>
 (function(){
 "use strict";
@@ -448,6 +449,8 @@ function applyProfile(){
 /* 체형: 예전 기록은 문자열 하나, v1.32.0부터는 여러 개 선택({legs:true,...}) */
 function bodyHas(pf,k){var b=pf&&pf.body;return typeof b==="string"?b===k:!!(b&&b[k]);}
 function bodyMap(b){if(typeof b==="string"){var o={};if(b&&b!=="normal")o[b]=true;return o;}return b||{};}
+/* 근력 운동 하는 날 수(0~3). 예전 값 normal=3, min=2 */
+function strN(pf){var v=pf&&pf.str;if(v==="min")return 2;if(v===undefined||v===null||v===""||v==="normal")return 3;v=+v;return isNaN(v)?3:Math.max(0,Math.min(3,Math.round(v)));}
 function buildProgram(pf){
   var inj=pf.inj||{},light=bodyHas(pf,"legs"),goal=pf.goal||"loss",days=+pf.days||5,b=bmiOf(pf),heavy=b>=30;
   var canRun=pf.run==="yes"&&pf.runKm>0&&pf.runMin>0&&!inj.knee;
@@ -482,7 +485,7 @@ function buildProgram(pf){
   function coreFix(o){if(cm!=="home"&&cm!=="stand")return o;Object.keys(o).forEach(function(k){var x=o[k];if(x.rec)return;var e=x.ex,hm=[],out=[];
     if(cm==="home"){hm=e.filter(function(id){return MAT.indexOf(id)>=0;});out=e.filter(function(id){return MAT.indexOf(id)<0;});}
     else e.forEach(function(id){if(MAT.indexOf(id)<0){if(out.indexOf(id)<0)out.push(id);return;}
-      var c=id==="sideplank"?["suitcase","pallof"]:id==="bridge"?["abduct"]:["pallof","suitcase"];
+      var c=id==="sideplank"?["suitcase","pallof"]:id==="bridge"?(x.ck==="A"?["abduct"]:["pallof","suitcase"]):["pallof","suitcase"];
       for(var i=0;i<c.length;i++){if(out.indexOf(c[i])<0&&e.indexOf(c[i])<0){out.push(c[i]);break;}}});
     o[k]=Object.assign({},x,{ex:out,homeEx:hm});});return o;}
   function wristFix(o){if(!inj.wrist)return o;Object.keys(o).forEach(function(k){var e=o[k].ex.slice(),i=e.indexOf("birddog");if(i>=0){var r=e.indexOf("deadbug")<0?"deadbug":e.indexOf("pallof")<0?"pallof":"";if(r)e[i]=r;else e.splice(i,1);}o[k]=Object.assign({},o[k],{ex:e});});return o;}
@@ -496,13 +499,14 @@ function buildProgram(pf){
     F3:{short:"전신",title:"전신 3",focus:"상체 위주의 전신 운동",ex:[light?"bridge":"legpress","pulldown","row","chestpress","pushdown","birddog"],c:"elliptical",ck:"A"}};
     base={mon:"F1",wed:"F2",fri:"F3"};prio=["F1","F2","F3"];}
   /* 근력 운동 비중: normal=보통(주 3일, 기본) / min=최소(주 2일, 나머지는 유산소 위주) */
-  if(pf.str==="min"){
-    var FA={short:"전신",title:"전신 머신 1",focus:"근력은 주 2일만 합니다. 큰 근육을 골고루 쓰는 날",ex:["legpress","pulldown","chestpress","row",light?"bridge":"legcurl","pallof","birddog"],c:"bike",ck:"A"};
+  var NS=strN(pf);
+  if(NS<3){
+    var FA={short:"전신",title:"전신 머신"+(NS>=2?" 1":""),focus:"근력은 주 "+NS+"일만 합니다. 큰 근육을 골고루 쓰는 날",ex:["legpress","pulldown","chestpress","row",light?"bridge":"legcurl","pallof","birddog"],c:"bike",ck:"A"};
     var FB={short:"전신",title:"전신 머신 2",focus:"근력은 주 2일만 합니다. 등·가슴 위주로 골고루",ex:[light?"bridge":"legpress","pulldown","row","chestpress","pushdown","birddog"],c:"elliptical",ck:"A"};
     var WC={short:"유산소",title:"유산소 + 코어",focus:"근력 기구 없이 충격 적은 유산소와 몸통 운동만 하는 날",ex:["deadbug","sideplank","pallof"],c:canRun?"elliptical":main,ck:"B",noStr:1};
-    if(days>=5){ses.A=FA;ses.C=WC;ses.E=FB;prio=["A","E","B","D","C"].concat(prio.filter(function(k){return k==="G"||k==="R";}));}
-    else if(days===4){ses.A=FA;ses.C=WC;ses.F=FB;prio=["A","F","B","C"];}
-    else{ses.F1=FA;ses.F2=Object.assign({},WC,{title:mn+" + 코어",short:mn,c:main});ses.F3=FB;prio=["F1","F3","F2"];}
+    var slots=days>=5?["A","E","C"]:days===4?["A","F","C"]:["F1","F3","F2"],keep=slots.slice(0,NS);
+    slots.forEach(function(k,ix){ses[k]=ix<NS?(ix===0?FA:FB):(days===3&&k==="F2"?Object.assign({},WC,{title:mn+" + 코어",short:mn,c:main}):WC);});
+    prio=keep.concat(prio.filter(function(k){return keep.indexOf(k)<0;}));
   }
   ses=coreFix(wristFix(ses));
   var tips=[(pf.exp==="new"?"근력운동은 처음이니 가벼운 무게로 자세부터 익힙니다.":"가벼운 무게로 몸을 적응시킵니다.")+(canRun?" 러닝은 지금 하던 "+rm+"분을 그대로 유지하세요.":""),
@@ -655,7 +659,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.38.0",newVer=null;
+var APP_VER="v1.39.0",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
@@ -1138,7 +1142,7 @@ function renderGuide(){
   if(pr){
     if(pr.light)why.push("하체가 굵은 편이라 하체는 가벼운 무게로 15~20회만 하고 무게는 올리지 않습니다. 레그 익스텐션은 뺐습니다.");
     if(bodyHas(PF,"thin"))why.push(pr.canRun?"마른 편이라 근력운동 비중을 유지합니다. 러닝은 평소 하던 시간 그대로 두었습니다. 식사를 거르지 마세요.":"마른 편이라 근력운동 비중을 유지하고, 유산소 시간을 5~10분 줄였습니다. 식사를 거르지 마세요.");
-    if(PF.str==="min")why.push("근력 운동은 주 2일(전신 머신)만 하고, 나머지 날은 유산소와 몸통 운동 위주로 짰습니다. 근육이 빠지지 않게 이 2일은 꼭 지켜 주세요.");
+    if(strN(PF)<3)why.push(strN(PF)===0?"근력(기구) 운동 없이 유산소와 몸통 운동만으로 짰습니다. 근육이 빠지기 쉬우니 가능하면 내 정보에서 주 2일 이상으로 올려 주세요.":"근력 운동은 주 "+strN(PF)+"일(전신 머신)만 하고, 나머지 날은 유산소와 몸통 운동 위주로 짰습니다."+(strN(PF)<2?" 권장(주 2일 이상)보다 적습니다.":" 근육이 빠지지 않게 이 2일은 꼭 지켜 주세요."));
     if(PF.core==="home")why.push("헬스장에 매트 자리가 없어, 헬스장에서는 기구 운동만 하고 버드독·데드버그 같은 매트 운동은 '집에서 코어'로 따로 나옵니다.");
     if(PF.core==="stand")why.push("헬스장에 매트 자리가 없어, 매트 운동을 서서 하는 동작으로 바꿨습니다(사이드 플랭크 → 수트케이스 홀드, 버드독·데드버그·컬업 → 팔로프 프레스 등, 브릿지 → 힙 어브덕션). 허리에 좋은 매트 운동은 가능하면 집에서도 해 주세요.");
     if(inj.wrist)why.push("손목이 불편해 손바닥으로 바닥·벽을 짚는 동작(버드독, 벽 푸시업)은 빼고 데드버그·팔로프 프레스로 바꿨습니다.");
@@ -1241,7 +1245,7 @@ function renderProf(){
   '<div id="pf-kcrow">'+fld("목표 소모량 (kcal)",'<input id="pf-kc" class="num" type="number" inputmode="numeric" min="0" step="10" value="'+(p.kcT||"")+'">')+'<div id="pf-kcg" class="kcg" aria-live="polite"></div></div>'+
   checks("inj","다쳤거나 아픈 곳 (있으면 모두 선택)",[["back","허리 (디스크 등)"],["shoulder","어깨"],["knee","무릎"],["wrist","손목"]],p.inj)+
   checks("body","체형에서 신경 쓰이는 점 (있으면 모두 선택, 없으면 비워두세요)",[["legs","하체가 굵은 편"],["belly","배·상체 위주로 살이 찜"],["thin","마른 편, 근육이 부족"]],bodyMap(p.body))+
-  radios("str","근력 운동 비중",[["normal","보통 (근력 주 3일, 권장)"],["min","최소 (근력 주 2일, 나머지는 유산소 위주)"]],p.str||"normal")+
+  '<fieldset class="fs"><legend>근력(기구) 운동 하는 날: <b id="strOut">주 '+strN(p)+'일</b></legend><input type="range" id="pf-str" class="ruler" min="0" max="3" step="1" value="'+strN(p)+'" list="strTicks" aria-label="근력 운동 하는 날 수"><datalist id="strTicks"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option></datalist><div class="rulerlab"><span>0일</span><span>1일</span><span>2일</span><span>3일</span></div><p class="meta" id="strTxt" style="margin:6px 0 0"></p></fieldset>'+
   radios("core","몸통(코어) 운동 하는 곳",[["mat","헬스장 매트에서 (지금처럼)"],["home","헬스장은 기구만, 매트 운동은 집에서"],["stand","헬스장에서 매트 없이 (서서·기구로)"]],p.core||"mat")+
   radios("run","평소 달리기",[["yes","하고 있음"],["no","안 함 / 어려움"]],p.run)+
   '<div class="row2" id="pf-runrow">'+fld("한 번에 달리는 거리 (km)",'<input id="pf-km" class="num" type="number" inputmode="decimal" step="0.1" min="0" value="'+(p.runKm||"")+'">')+fld("걸리는 시간 (분)",'<input id="pf-min" class="num" type="number" inputmode="numeric" min="0" value="'+(p.runMin||"")+'">')+'</div>'+
@@ -1250,6 +1254,8 @@ function renderProf(){
   var f=document.getElementById("pform");
   function runRow(){var r=f.querySelector('input[name="run"]:checked');document.getElementById("pf-runrow").hidden=!(r&&r.value==="yes");}
   f.querySelectorAll('input[name="run"]').forEach(function(x){x.onchange=runRow;});runRow();
+  function strRow(){var v=+document.getElementById("pf-str").value,T=["유산소와 몸통 운동만 합니다. 근육이 빠지기 쉬워 <b style=\"color:#B42318\">권장하지 않습니다</b> (WHO: 근력 운동 주 2일 이상).","근력은 주 1일(전신 머신)만, 나머지는 유산소 위주입니다. 권장(주 2일 이상)보다 적습니다.","근력은 주 2일(전신 머신 2번), 나머지는 유산소 위주입니다. 권장 최소 기준을 채웁니다.","근력 주 3일(하체·상체·등가슴 나눠서). 기본 설정이자 권장입니다."];document.getElementById("strOut").textContent="주 "+v+"일";document.getElementById("strTxt").innerHTML=T[v]+" 가는 날 수가 적으면 그만큼 줄어들 수 있습니다.";}
+  document.getElementById("pf-str").oninput=strRow;strRow();
   function kcRow(){var r=f.querySelector('input[name="kcu"]:checked');document.getElementById("pf-kcrow").hidden=!(r&&r.value!=="none");}
   f.querySelectorAll('input[name="kcu"]').forEach(function(x){x.onchange=kcRow;});kcRow();
   /* 칼로리 목표 가이드: 폼에 적힌 값으로 루틴을 미리 계산해 가능한 범위를 보여줌 */
@@ -1258,7 +1264,7 @@ function renderProf(){
     var inj={},body={};f.querySelectorAll('input[name="inj"]:checked').forEach(function(x){inj[x.value]=true;});f.querySelectorAll('input[name="body"]:checked').forEach(function(x){body[x.value]=true;});
     o.h=parseFloat(document.getElementById("pf-h").value)||o.h||170;o.w=parseFloat(document.getElementById("pf-w").value)||o.w||70;
     o.goal=fv("goal")||o.goal||"loss";o.exp=fv("exp")||o.exp||"new";o.days=+(fv("days")||o.days||5);o.dur=+(fv("dur")||o.dur||60);o.inj=inj;o.body=body;
-    o.run=fv("run")||"no";o.runKm=o.run==="yes"?(parseFloat(document.getElementById("pf-km").value)||0):0;o.runMin=o.run==="yes"?(parseFloat(document.getElementById("pf-min").value)||0):0;return o;}
+    o.str=+document.getElementById("pf-str").value;o.core=fv("core")||o.core||"mat";o.run=fv("run")||"no";o.runKm=o.run==="yes"?(parseFloat(document.getElementById("pf-km").value)||0):0;o.runMin=o.run==="yes"?(parseFloat(document.getElementById("pf-min").value)||0):0;return o;}
   function sim(o){var k1=S.pf,k2=PF,k3=PRG,k4=SES,k5=BASE,k6=PRIO;try{S.pf=o;applyProfile();return weekPlanKcal(curWeek());}finally{S.pf=k1;PF=k2;PRG=k3;SES=k4;BASE=k5;PRIO=k6;}}
   var kcgT=0;
   var W=function(v){return Math.round(v).toLocaleString();};
@@ -1301,6 +1307,7 @@ function renderProf(){
     if(!f._ack){
       var r=kcCalc(),wn=[];
       if(r&&r.cls==="bad")wn.push('칼로리 목표 <b>'+(r.u==="day"?"하루 ":"일주일 ")+W(r.t)+'kcal</b>는 정한 운동 시간('+r.o.dur+'분) 안에서 채울 수 없습니다. 최대 운동하는 날 평균 약 <b>'+W(r.avg1)+'kcal</b>(일주일 약 '+W(r.b1.plan)+'kcal)까지만 반영됩니다.');
+      if(+document.getElementById("pf-str").value===0)wn.push('근력(기구) 운동을 <b>주 0일</b>로 정했습니다. 유산소만 하면 체중과 함께 근육도 빠지기 쉽고, 허리를 받쳐 주는 힘도 약해질 수 있습니다. WHO는 근력 운동을 주 2일 이상 권합니다.');
       if(r&&r.mins>420)wn.push('일주일 운동 시간이 최대 약 <b>'+r.mins+'분</b>(주 '+r.o.days+'일 × '+r.o.dur+'분)입니다. 건강 권장량(주 150~300분)보다 훨씬 많아 피로·부상 위험이 커집니다. 퇴근 후 운동이면 주 5일 · 60분 정도를 권합니다.');
       if(wn.length){showMsg("저장하기 전에 확인해 주세요",wn.join("<br><br>"),[["다시 정하기",function(){var x=document.getElementById(r.cls==="bad"?"pf-kc":"pf-kcrow")||f;x.scrollIntoView({block:"center"});if(x.focus)x.focus();},0],["그래도 저장",function(){f._ack=1;f.onsubmit({preventDefault:function(){}});},1]]);return;}
     }
@@ -1308,7 +1315,7 @@ function renderProf(){
     var inj={};f.querySelectorAll('input[name="inj"]:checked').forEach(function(x){inj[x.value]=true;});
     var body={};f.querySelectorAll('input[name="body"]:checked').forEach(function(x){body[x.value]=true;});
     var first=!S.pf;
-    S.pf={name:document.getElementById("pf-name").value.trim(),sex:g("sex"),h:h,w:w,goal:g("goal"),exp:g("exp"),days:+g("days"),dur:+g("dur"),inj:inj,body:body,core:g("core")||"mat",str:g("str")||"normal",run:run,runKm:run==="yes"?km:0,runMin:run==="yes"?mi:0,kcU:kcu==="none"?"":kcu,kcT:kcu==="none"?0:kc};
+    S.pf={name:document.getElementById("pf-name").value.trim(),sex:g("sex"),h:h,w:w,goal:g("goal"),exp:g("exp"),days:+g("days"),dur:+g("dur"),inj:inj,body:body,core:g("core")||"mat",str:+document.getElementById("pf-str").value,run:run,runKm:run==="yes"?km:0,runMin:run==="yes"?mi:0,kcU:kcu==="none"?"":kcu,kcT:kcu==="none"?0:kc};
     if(first){S.start=ymd(mondayOf(today));if(!S.bw.some(function(x){return x.d===ymd(today);}))S.bw.push({d:ymd(today),kg:w});}
     save();applyProfile();week=curWeek();dayK=todayKey;view="day";renderAll();window.scrollTo(0,0);
   };
@@ -1326,7 +1333,7 @@ function profCard(){
   '<tr><th>칼로리 목표</th><td class="num">'+(p.kcT>0&&p.kcU?(p.kcU==="day"?"하루":"일주일")+' '+p.kcT.toLocaleString()+'kcal':'<span class="meta">정하지 않음 · 아래 "정보 수정"에서 정할 수 있습니다</span>')+'</td></tr>'+
   '<tr><th>경험</th><td>'+em[p.exp]+'</td></tr>'+
   '<tr><th>아픈 곳</th><td>'+injText(p.inj)+'</td></tr>'+
-  '<tr><th>근력 비중</th><td>'+(p.str==="min"?"최소 (주 2일)":"보통 (주 3일)")+'</td></tr>'+
+  '<tr><th>근력 운동</th><td>주 '+strN(p)+'일'+(strN(p)<2?' <span style="color:#B42318">(권장보다 적음)</span>':'')+'</td></tr>'+
   '<tr><th>코어 운동</th><td>'+({home:"헬스장은 기구만, 매트 운동은 집에서",stand:"매트 없이 서서·기구로"}[p.core]||"헬스장 매트에서")+'</td></tr>'+
   '<tr><th>체형</th><td>'+(Object.keys(bodyMap(p.body)).filter(function(k){return bodyMap(p.body)[k]&&bm[k];}).map(function(k){return bm[k];}).join(", ")||"특별히 없음")+'</td></tr>'+
   '<tr><th>달리기</th><td>'+(p.run==="yes"?p.runKm+'km · '+p.runMin+'분':"안 함")+(p.run==="yes"&&p.inj&&p.inj.knee?" (무릎 때문에 루틴에서는 제외)":"")+'</td></tr>'+
