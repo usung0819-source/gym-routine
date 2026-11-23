@@ -415,7 +415,7 @@ window.dispatchEvent(new Event("fb-ready"));
   </div>
 </nav>
 
-<script src="fig.js?v=1.39.0"></script>
+<script src="fig.js?v=1.39.1"></script>
 <script>
 (function(){
 "use strict";
@@ -429,12 +429,23 @@ var S=norm({}),localKey=KEY,ready=false,sync="local",wTimer=null,writing=false,p
 function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function parse(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
 function mondayOf(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);return x;}
-var today=new Date();
+/* 오늘 날짜는 휴대폰 시간대와 상관없이 한국 시간(Asia/Seoul) 기준 */
+function kstDate(){try{var p=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()),o={};p.forEach(function(x){o[x.type]=x.value;});if(o.year&&o.month&&o.day)return new Date(+o.year,+o.month-1,+o.day);}catch(e){}var n=new Date(Date.now()+(540+new Date().getTimezoneOffset())*60000);return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
+var today=kstDate();
 if(!S.start){S.start=ymd(mondayOf(today));save();}
 function curWeek(){var diff=Math.round((mondayOf(today)-mondayOf(parse(S.start)))/86400000);return Math.max(1,Math.floor(diff/7)+1);}
 var ORDER=["mon","tue","wed","thu","fri","sat","sun"];
 var LABEL={mon:"월",tue:"화",wed:"수",thu:"목",fri:"금",sat:"토",sun:"일"};
 var todayKey=["sun","mon","tue","wed","thu","fri","sat"][today.getDay()];
+/* 앱을 켜 둔 채 자정이 지나면 '오늘'을 새 날짜로 바꿈 (다시 볼 때, 1분마다 확인) */
+function checkDay(){
+  var t=kstDate();if(ymd(t)===ymd(today))return;
+  var onToday=(typeof dayK!=="undefined"&&dayK===todayKey&&typeof week!=="undefined"&&week===curWeek());
+  today=t;todayKey=["sun","mon","tue","wed","thu","fri","sat"][t.getDay()];
+  if(typeof ready!=="undefined"&&ready&&S.pf){if(onToday){week=curWeek();dayK=todayKey;}if(typeof applyProfile==="function")applyProfile();renderAll();if(typeof pushSync==="function")pushSync();}
+}
+document.addEventListener("visibilitychange",function(){if(!document.hidden)checkDay();});
+window.addEventListener("focus",checkDay);window.addEventListener("pageshow",checkDay);setInterval(checkDay,60000);
 function dateOf(w,d){var x=mondayOf(parse(S.start));x.setDate(x.getDate()+(w-1)*7+ORDER.indexOf(d));return (x.getMonth()+1)+"/"+x.getDate();}
 
 /* ---------- 개인 정보 → 맞춤 프로그램 ---------- */
@@ -659,7 +670,7 @@ function dk(w,d){return w+"-"+d;}
 function setsOf(w,d,id){return (S.sets[dk(w,d)]||{})[id]||[];}
 function isDone(w,d,id){return !!(S.done[dk(w,d)]||{})[id];}
 /* ---------- 버전 확인 · 새로고침 ---------- */
-var APP_VER="v1.39.0",newVer=null;
+var APP_VER="v1.39.1",newVer=null;
 function checkUpdate(){
   if(location.protocol==="file:")return;
   fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
